@@ -364,7 +364,6 @@ struct NextBeersGridView: View {
             // Add More Card
             AddMoreBeerView()
         }
-        .padding(.horizontal, 20)
     }
 }
 
@@ -382,7 +381,6 @@ struct DrankBeersGridView: View {
             // Add More Card
             AddMoreBeerView()
         }
-        .padding(.horizontal, 20)
     }
 }
 
@@ -428,7 +426,6 @@ struct ListsView: View {
             
             CreateNewListView()
         }
-        .padding(.horizontal, 20)
     }
 }
 
