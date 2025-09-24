@@ -23,32 +23,12 @@ struct MyBarlieView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(spacing: 0) {
-                            // Profile Header
-                            ProfileHeaderView(isSearching: $isSearching)
-                                .opacity(showCompactHeader ? 0 : 1)
-                                .background(
-                                    GeometryReader { geometry in
-                                        Color.clear
-                                            .onAppear {
-                                                headerHeight = geometry.size.height
-                                            }
-                                            .onChange(of: geometry.frame(in: .global).minY) { newValue in
-                                                // More reliable scroll detection
-                                                let threshold: CGFloat = headerHeight > 0 ? headerHeight * 0.3 : 60
-                                                let shouldShowCompact = newValue < -threshold
-                                                
-                                                if shouldShowCompact != showCompactHeader {
-                                                    withAnimation(.easeInOut(duration: 0.25)) {
-                                                        showCompactHeader = shouldShowCompact
-                                                    }
-                                                }
-                                            }
-                                            .preference(
-                                                key: ScrollOffsetPreferenceKey.self,
-                                                value: geometry.frame(in: .global).minY
-                                            )
-                                    }
-                                )
+                            // Profile Header with Fixed Search Icon
+                            ProfileHeaderWithFixedSearchView(
+                                isSearching: $isSearching,
+                                showCompactHeader: $showCompactHeader,
+                                headerHeight: $headerHeight
+                            )
                             
                             // User Stats
                             UserStatsView()
@@ -77,20 +57,8 @@ struct MyBarlieView: View {
                         }
                     }
                     .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
-                        // Use a more reliable threshold based on header height
-                        let threshold: CGFloat = headerHeight > 0 ? headerHeight * 0.3 : 60
-                        let shouldShowCompact = value < -threshold
-                        
-                        // Add hysteresis to prevent flickering
-                        let currentState = showCompactHeader
-                        let newState = shouldShowCompact
-                        
-                        if currentState != newState {
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                showCompactHeader = newState
-                            }
-                        }
-                        print("Scroll offset: \(value), threshold: \(threshold), showCompact: \(showCompactHeader)")
+                        // Scroll detection is now handled in ProfileHeaderWithFixedSearchView
+                        print("Scroll offset: \(value), showCompact: \(showCompactHeader)")
                     }
                 }
                 
@@ -228,6 +196,94 @@ struct CompactNavigationBarView: View {
                 .ignoresSafeArea(.container, edges: .top)
         )
         .shadow(color: .black.opacity(0.1), radius: 1, x: 0, y: 1)
+    }
+}
+
+struct ProfileHeaderWithFixedSearchView: View {
+    @Binding var isSearching: Bool
+    @Binding var showCompactHeader: Bool
+    @Binding var headerHeight: CGFloat
+    
+    var body: some View {
+        HStack(alignment: .top) {
+            // Fixed Search Icon (never moves)
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    isSearching = true
+                }
+            }) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 20))
+                    .foregroundColor(.white)
+                    .frame(width: 44, height: 44)
+                    .padding(.top, 2)
+            }
+            
+            Spacer()
+            
+            // Profile Content (shrinks and fades)
+            VStack(spacing: 4) {
+                // Profile Image - shrinks when scrolling
+                Circle()
+                    .fill(Color(.systemGray2))
+                    .frame(
+                        width: showCompactHeader ? 30 : 60,
+                        height: showCompactHeader ? 30 : 60
+                    )
+                    .overlay(
+                        Image(systemName: "person.fill")
+                            .font(.system(size: showCompactHeader ? 15 : 30))
+                            .foregroundColor(.primary)
+                    )
+                    .animation(.easeInOut(duration: 0.25), value: showCompactHeader)
+                
+                // Username - fades out when scrolling
+                Text("Rome")
+                    .font(.system(size: showCompactHeader ? 17 : 24, weight: .bold))
+                    .foregroundColor(.white)
+                    .opacity(showCompactHeader ? 0 : 1)
+                    .animation(.easeInOut(duration: 0.25), value: showCompactHeader)
+                
+                // Handle - fades out when scrolling
+                Text("@romandenson")
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                    .opacity(showCompactHeader ? 0 : 1)
+                    .animation(.easeInOut(duration: 0.25), value: showCompactHeader)
+            }
+            
+            Spacer()
+            
+            // Empty space for symmetry
+            Color.clear
+                .frame(width: 44, height: 44)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 20)
+        .background(Color.black)
+        .background(
+            GeometryReader { geometry in
+                Color.clear
+                    .onAppear {
+                        headerHeight = geometry.size.height
+                    }
+                    .onChange(of: geometry.frame(in: .global).minY) { newValue in
+                        // More reliable scroll detection
+                        let threshold: CGFloat = headerHeight > 0 ? headerHeight * 0.3 : 60
+                        let shouldShowCompact = newValue < -threshold
+                        
+                        if shouldShowCompact != showCompactHeader {
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                showCompactHeader = shouldShowCompact
+                            }
+                        }
+                    }
+                    .preference(
+                        key: ScrollOffsetPreferenceKey.self,
+                        value: geometry.frame(in: .global).minY
+                    )
+            }
+        )
     }
 }
 
