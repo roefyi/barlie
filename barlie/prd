@@ -1,0 +1,425 @@
+# Barlie iOS App - Product Requirements Document (PRD)
+
+## Executive Summary
+
+**Product Name:** Barlie  
+**Platform:** iOS (iPhone)  
+**Target Release:** Q2 2026  
+**Development Timeline:** 6 months MVP  
+
+Barlie is a social craft beer rating and discovery app that connects beer enthusiasts through reviews, ratings, and social sharing. Built entirely with free APIs and services to minimize operational costs while maximizing user engagement.
+
+---
+
+## Product Vision & Goals
+
+### Vision Statement
+"Connect craft beer lovers worldwide through authentic reviews, social discovery, and personalized recommendations."
+
+### Primary Goals
+1. Create an engaged community of craft beer enthusiasts
+2. Provide comprehensive beer discovery and rating platform
+3. Build sustainable user-generated content ecosystem
+4. Achieve 10K active users within 12 months of launch
+
+### Success Metrics
+- **User Engagement**: 3+ app sessions per week per active user
+- **Content Creation**: 2+ beer ratings per user per month
+- **Social Interaction**: 60% of users following at least 5 friends
+- **Retention**: 40% 30-day retention rate
+
+---
+
+## Target Market & User Personas
+
+### Primary Target Market
+- **Demographics**: Ages 25-45, disposable income $40K+
+- **Psychographics**: Craft beer enthusiasts, social media active, quality-conscious
+- **Geographic**: United States (initial), expanding to craft beer markets globally
+
+### User Personas
+
+#### 1. "The Explorer" (40% of users)
+- **Profile**: Seeks new and unique craft beers
+- **Motivation**: Discovery and variety
+- **Behavior**: Uses search heavily, follows brewery accounts, saves "want to try" lists
+
+#### 2. "The Critic" (30% of users)
+- **Profile**: Knowledgeable beer enthusiast who writes detailed reviews
+- **Motivation**: Sharing expertise and helping others
+- **Behavior**: Writes lengthy reviews, rates frequently, gains followers
+
+#### 3. "The Social Sipper" (30% of users)
+- **Profile**: Enjoys sharing experiences with friends
+- **Motivation**: Social connection and FOMO
+- **Behavior**: Frequent check-ins, shares to other social platforms, follows friends
+
+---
+
+## Technical Architecture & Free API Integration
+
+### Core Free APIs & Services
+
+#### 1. **Open Brewery DB** (Primary Data Source)
+- **Endpoint**: `https://api.openbrewerydb.org/breweries`
+- **Coverage**: 15,000+ breweries worldwide
+- **Data**: Name, address, phone, website, brewery type
+- **Rate Limits**: None
+- **Cost**: $0
+
+#### 2. **Firebase (Backend as a Service)**
+- **Authentication**: Phone, email, Google, Apple Sign-In
+- **Database**: Firestore for user data, reviews, social features
+- **Storage**: Images and user content
+- **Analytics**: User behavior tracking
+- **Messaging**: Push notifications
+- **Free Tier**: 50K reads/writes per day, 1GB storage
+
+#### 3. **Barcode Lookup API**
+- **Service**: UPC Database API (free tier)
+- **Purpose**: Beer barcode scanning
+- **Limits**: 100 requests/day free
+- **Fallback**: Manual beer entry
+
+#### 4. **Apple Native Services**
+- **Core Location**: Nearby brewery discovery
+- **AVFoundation**: Barcode scanning camera
+- **Vision Framework**: Text recognition for beer labels
+- **Social Framework**: Share to social media
+
+### iOS Architecture
+
+#### Technology Stack
+- **Language**: Swift 5.0+
+- **Minimum iOS**: iOS 15.0+
+- **Architecture**: MVVM with Combine
+- **UI Framework**: SwiftUI
+- **Navigation**: NavigationStack (iOS 16+)
+- **Networking**: URLSession with async/await
+
+#### Core Frameworks
+```swift
+import SwiftUI
+import Firebase
+import AVFoundation
+import Vision
+import CoreLocation
+import Social
+import StoreKit
+```
+
+---
+
+## Feature Specifications
+
+### Tab 1: Feed (Social Discovery)
+
+#### Core Features
+1. **Activity Feed**
+   - Chronological posts from followed users
+   - Beer check-ins with photos, ratings, location
+   - Like and comment interactions
+   - Pull-to-refresh functionality
+
+2. **Content Creation**
+   - Quick check-in flow: Photo → Beer selection → Rating → Post
+   - Rich text reviews with beer details auto-populated
+   - Location tagging from brewery database
+   - Share to Instagram/Twitter integration
+
+#### Technical Implementation
+```swift
+// Feed data structure
+struct BeerCheckIn: Codable, Identifiable {
+    let id: UUID
+    let userId: String
+    let beerId: String
+    let rating: Double
+    let review: String?
+    let photoURL: String?
+    let breweryId: String?
+    let timestamp: Date
+    let likes: Int
+    let comments: [Comment]
+}
+```
+
+#### User Stories
+- "As a user, I want to see my friends' beer activities so I can discover new beers"
+- "As a user, I want to quickly check-in a beer I'm drinking with minimal friction"
+- "As a user, I want to react to my friends' posts to show engagement"
+
+### Tab 2: Search (Beer Discovery)
+
+#### Core Features
+1. **Brewery Search**
+   - Search by name, city, state, or brewery type
+   - Map view showing nearby breweries
+   - Brewery detail pages with contact info and hours
+   - "Been Here" check-in functionality
+
+2. **Beer Discovery**
+   - Text search for user-generated beer database
+   - Barcode scanning for instant beer lookup
+   - Filter by beer style, ABV, ratings
+   - Visual recognition of beer labels (iOS Vision)
+
+3. **Smart Recommendations**
+   - "Beers Near You" based on current location
+   - "Trending This Week" from user activity
+   - "Similar to [Beer Name]" based on style/brewery
+
+#### Technical Implementation
+```swift
+// Brewery API integration
+class BreweryService {
+    private let baseURL = "https://api.openbrewerydb.org/breweries"
+    
+    func searchBreweries(query: String) async throws -> [Brewery] {
+        let url = URL(string: "\(baseURL)/search?query=\(query)")!
+        let (data, _) = try await URLSession.shared.data(from: url)
+        return try JSONDecoder().decode([Brewery].self, from: data)
+    }
+    
+    func nearbyBreweries(lat: Double, lng: Double) async throws -> [Brewery] {
+        let url = URL(string: "\(baseURL)?by_dist=\(lat),\(lng)&per_page=50")!
+        let (data, _) = try await URLSession.shared.data(from: url)
+        return try JSONDecoder().decode([Brewery].self, from: data)
+    }
+}
+```
+
+#### User Stories
+- "As a user, I want to find breweries near me so I can plan visits"
+- "As a user, I want to scan a beer barcode to quickly find information"
+- "As a user, I want to search for specific beers to read reviews"
+
+### Tab 3: Profile (Personal Hub)
+
+#### Core Features
+1. **Personal Stats Dashboard**
+   - Total beers tried, average rating given
+   - Favorite beer styles (calculated from ratings)
+   - Check-in streak counter
+   - Monthly/yearly activity summaries
+
+2. **Beer Lists Management**
+   - **All Beers**: Complete rating history with search/filter
+   - **Favorites**: 4+ star rated beers
+   - **Want to Try**: Saved beers from discovery
+   - **Custom Lists**: User-created themed collections
+
+3. **Social Profile**
+   - Public/private profile toggle
+   - Followers/following counts
+   - Recent activity stream
+   - Achievement badges
+
+#### Technical Implementation
+```swift
+// User profile data structure
+struct UserProfile: Codable {
+    let userId: String
+    var displayName: String
+    var profileImageURL: String?
+    var bio: String?
+    var totalBeers: Int
+    var averageRating: Double
+    var favoriteStyle: String?
+    var checkInStreak: Int
+    var isPublic: Bool
+    var followers: [String]
+    var following: [String]
+}
+```
+
+---
+
+## User Experience & Design
+
+### Design Principles
+1. **Beer-First Design**: Visual focus on beer imagery and ratings
+2. **Social Connection**: Emphasize friend activity and community
+3. **Quick Actions**: Minimize friction for check-ins and ratings
+4. **Discovery-Driven**: Surface new beers and breweries prominently
+
+### iOS Design Guidelines
+- **Human Interface Guidelines**: Full compliance with Apple's HIG
+- **Dynamic Type**: Support for accessibility text sizing
+- **Dark Mode**: Full dark mode support
+- **Haptic Feedback**: Tactile responses for key interactions
+- **Native Navigation**: Standard iOS navigation patterns
+
+### Key UI Components
+```swift
+// Custom rating component
+struct StarRating: View {
+    @Binding var rating: Double
+    let maximumRating = 5
+    
+    var body: some View {
+        HStack {
+            ForEach(1...maximumRating, id: \.self) { number in
+                Button {
+                    rating = Double(number)
+                } label: {
+                    Image(systemName: numberInRating(number) ? "star.fill" : "star")
+                        .foregroundColor(numberInRating(number) ? .yellow : .gray)
+                }
+            }
+        }
+    }
+}
+```
+
+---
+
+## Data Management & Privacy
+
+### Firebase Firestore Structure
+```
+/users/{userId}
+  - profile: UserProfile
+  - lists: [BeerList]
+  - privacy_settings: PrivacySettings
+
+/beers/{beerId}
+  - name: String
+  - brewery_id: String
+  - style: String
+  - abv: Double
+  - created_by: String (user who added)
+  
+/checkins/{checkinId}
+  - BeerCheckIn data structure
+  
+/breweries/{breweryId}
+  - Brewery data (synced from Open Brewery DB)
+```
+
+### Privacy & Data Protection
+- **GDPR Compliance**: Clear consent flows and data export options
+- **iOS Privacy**: Proper usage descriptions for camera, location access
+- **Data Minimization**: Only collect necessary user information
+- **User Control**: Granular privacy settings for profile visibility
+
+---
+
+## Monetization Strategy
+
+### Phase 1: Free App with Premium Features
+- **Core Features**: Free forever
+- **Premium Subscription** ($2.99/month):
+  - Unlimited beer lists (free users: 5 lists)
+  - Advanced analytics and insights
+  - Priority customer support
+  - Early access to new features
+
+### Phase 2: Partnership Revenue
+- **Brewery Partnerships**: Promoted brewery placements
+- **Affiliate Links**: Beer purchasing recommendations
+- **Event Promotion**: Local beer events and festivals
+
+---
+
+## Development Roadmap
+
+### Phase 1: MVP (Months 1-3)
+- **Week 1-4**: Project setup, Firebase integration, basic UI
+- **Week 5-8**: User authentication, profile management
+- **Week 9-12**: Basic feed, brewery search, rating system
+
+### Phase 2: Core Features (Months 4-5)
+- **Week 13-16**: Social features (following, comments, likes)
+- **Week 17-20**: Barcode scanning, advanced search, lists
+
+### Phase 3: Polish & Launch (Month 6)
+- **Week 21-22**: iOS review optimization, bug fixes
+- **Week 23-24**: App Store submission, marketing preparation
+
+---
+
+## Technical Requirements & Constraints
+
+### iOS Requirements
+- **Minimum iOS Version**: 15.0
+- **Device Support**: iPhone 12 and newer (optimal camera performance)
+- **Storage**: 50MB app size, 500MB user data allowance
+- **Network**: Offline mode for viewing saved content
+
+### Performance Targets
+- **App Launch**: < 2 seconds cold start
+- **Image Loading**: < 1 second for cached images
+- **Search Results**: < 500ms for brewery search
+- **Battery**: < 5% battery drain per 30-minute session
+
+### Free Tier Limitations & Mitigation
+1. **Firebase Limits**:
+   - 50K reads/writes per day
+   - **Mitigation**: Aggressive caching, batch operations, pagination
+
+2. **Barcode API Limits**:
+   - 100 requests/day
+   - **Mitigation**: Local beer database, manual entry fallback
+
+---
+
+## Risk Assessment & Mitigation
+
+### Technical Risks
+1. **API Rate Limiting**
+   - **Risk**: Free APIs may throttle or go offline
+   - **Mitigation**: Local caching, multiple API fallbacks, graceful degradation
+
+2. **User-Generated Content Quality**
+   - **Risk**: Poor quality beer data, spam reviews
+   - **Mitigation**: Community moderation, rating thresholds, report systems
+
+### Business Risks
+1. **User Acquisition**
+   - **Risk**: Difficulty gaining initial users without marketing budget
+   - **Mitigation**: Community building, brewery partnerships, referral programs
+
+2. **Competition**
+   - **Risk**: Established apps like Untappd dominating market
+   - **Mitigation**: Focus on unique social features, superior iOS experience
+
+---
+
+## Success Metrics & KPIs
+
+### User Engagement Metrics
+- **Daily Active Users (DAU)**: Target 20% of monthly users
+- **Session Duration**: Average 5+ minutes per session
+- **Content Creation**: 50% of users rating at least one beer per month
+
+### Business Metrics
+- **User Acquisition Cost (UAC)**: < $2 per user through organic growth
+- **Lifetime Value (LTV)**: $15+ per user over 12 months
+- **Premium Conversion**: 15% of active users upgrading to premium
+
+### Technical Metrics
+- **App Store Rating**: Maintain 4.5+ stars
+- **Crash Rate**: < 0.1% of sessions
+- **API Performance**: 99.5% uptime for core features
+
+---
+
+## Launch Strategy
+
+### Pre-Launch (Month 5)
+- TestFlight beta with 500 craft beer enthusiasts
+- Brewery partnerships in 3 major markets
+- Social media presence building
+
+### Launch Week
+- App Store feature submission
+- Influencer partnerships with beer bloggers
+- Local craft beer community outreach
+
+### Post-Launch (Month 7-12)
+- Weekly feature releases
+- User feedback incorporation
+- Geographic expansion based on user clusters
+
+This PRD provides a comprehensive blueprint for building Barlie using entirely free APIs and services, ensuring minimal operational costs while delivering a compelling craft beer social experience.

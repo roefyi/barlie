@@ -1,0 +1,252 @@
+# Barlie Beer App - User Journey Map (Phase 1 - No Feed)
+
+## App Overview
+**Barlie** - A craft beer rating, review, and discovery platform focused on personal beer tracking and brewery exploration. Social feed features planned for Phase 2.
+
+## Core User Personas
+- **The Explorer**: Seeks new and unique craft beers to try
+- **The Tracker**: Loves to document and organize their beer experiences
+- **The Researcher**: Enjoys discovering breweries and planning visits
+
+---
+
+## Two-Tab Architecture (Phase 1)
+
+### Tab 1: Search (Beer & Brewery Discovery)
+### Tab 2: Profile (Personal Beer Hub)
+
+---
+
+## Tab 1: Search (Beer & Brewery Discovery)
+
+### First-Time User Journey
+1. **Onboarding**
+   - Welcome screen explaining app purpose
+   - Tutorial on rating system (1-5 stars)
+   - Permission requests (location for nearby breweries, camera for barcode scanning)
+   - Quick profile setup (name, location preferences)
+
+2. **Discovery Introduction**
+   - "Find breweries near you" guided tour
+   - "Scan your first beer" barcode tutorial
+   - Sample brewery search demonstration
+
+### Regular User Journey
+1. **Brewery Discovery**
+   - Browse nearby breweries using location services
+   - Search breweries by name, city, or type
+   - View brewery details (hours, contact, location)
+   - Mark breweries as "Been Here" or "Want to Visit"
+   - Get directions to breweries
+
+2. **Beer Discovery & Rating**
+   - Search existing beer database by name or style
+   - Scan beer barcodes for instant identification
+   - Add new beers to database if not found
+   - Rate and review beers immediately
+   - Take photos of beers for personal records
+
+3. **Exploration Patterns**
+   - Filter breweries by type (microbrewery, brewpub, etc.)
+   - Browse by beer style categories
+   - View "Popular in Your Area" suggestions
+   - Explore brewery profiles and their beer offerings
+
+### Search Entry Points
+1. **Browse Categories**
+   - Nearby breweries (location-based)
+   - By brewery type (microbrewery, brewpub, taproom)
+   - Beer styles (IPA, Stout, Lager, etc.)
+   - Recently added beers
+
+2. **Active Search**
+   - Text search for breweries or beers
+   - Barcode scanner for instant beer lookup
+   - Visual search using camera (future enhancement)
+   - Auto-complete suggestions from search history
+
+### Beer Detail Experience
+1. **Comprehensive Beer Information**
+   - High-resolution beer photos
+   - Brewery information and location
+   - Style details and characteristics
+   - Personal rating and review space
+   - "Similar Beers" recommendations
+
+2. **Personal Actions**
+   - Rate beer (1-5 stars)
+   - Write detailed review
+   - Add to personal lists
+   - Mark as "Want to Try" or "Favorite"
+   - Take and save beer photos
+
+---
+
+## Tab 2: Profile (Personal Beer Hub)
+
+### Personal Dashboard Overview
+1. **Stats at a Glance**
+   - Total beers tried
+   - Average rating given
+   - Favorite beer style (auto-calculated)
+   - Current month's activity
+   - Achievement badges earned
+
+2. **Quick Access Actions**
+   - Recent beer ratings
+   - Quick rate unrated beers
+   - Add beer from search
+   - Create new custom list
+
+### Personal Beer Management
+1. **All Beers Section**
+   - Complete chronological history
+   - Search and filter personal collection
+   - Sort by rating, date tried, or alphabetical
+   - Edit previous ratings and reviews
+   - Export beer list functionality
+
+2. **Smart Lists (Auto-Generated)**
+   - **Favorites**: All 4+ star rated beers
+   - **Want to Try**: Saved for future tasting
+   - **Recently Added**: Last 30 days of activity
+   - **Top Rated**: Highest personal ratings
+   - **This Month**: Current month's beers
+
+3. **Custom Lists**
+   - Create themed collections (Summer Beers, Date Night, etc.)
+   - Organize by brewery visits
+   - Seasonal or event-based lists
+   - Notes and descriptions for each list
+
+### Brewery Tracking
+1. **Brewery History**
+   - All visited breweries with dates
+   - Beers tried at each location
+   - Personal brewery ratings
+   - Notes about brewery visits
+   - "Want to Visit" brewery wishlist
+
+### Activity & Insights
+1. **Personal Analytics**
+   - Monthly/yearly drinking patterns
+   - Favorite styles evolution over time
+   - Rating consistency analysis
+   - Brewery exploration progress
+   - Personal taste profile development
+
+2. **Achievement System**
+   - Style Explorer (try 10 different styles)
+   - Brewery Hopper (visit 25 breweries)
+   - Consistent Critic (rate 100 beers)
+   - Local Expert (try 50 beers from local breweries)
+
+---
+
+## Key User Flows (Two-Tab Architecture)
+
+### Flow 1: Discovering and Rating a New Beer
+1. **Search Tab**: Find beer through brewery search or barcode scan
+2. **Beer Detail**: View information, decide to try
+3. **Add to List**: Save to "Want to Try" if not drinking now
+4. **Real World**: Purchase and try the beer
+5. **Search Tab**: Re-find beer and rate/review
+6. **Profile Tab**: Automatically appears in personal history
+
+### Flow 2: Planning a Brewery Visit
+1. **Search Tab**: Explore nearby breweries
+2. **Brewery Detail**: Check hours, location, beer offerings
+3. **Profile Tab**: Add to "Want to Visit" list
+4. **Real World**: Visit brewery and try multiple beers
+5. **Search Tab**: Rate each beer individually during visit
+6. **Profile Tab**: Mark brewery as "Been Here", view visit summary
+
+### Flow 3: Organizing Personal Collection
+1. **Profile Tab**: Review recent beer ratings
+2. **Create Custom List**: "Summer Patio Beers"
+3. **Add Beers**: Select from personal beer history
+4. **Search Tab**: Discover similar beers to add to list
+5. **Profile Tab**: Reference list for future purchases
+
+### Flow 4: Barcode Scanning Discovery
+1. **Search Tab**: Open camera scanner
+2. **Scan**: Point at beer barcode
+3. **Beer Found**: View details or add new if not in database
+4. **Rate**: Provide rating and optional review
+5. **Profile Tab**: Beer automatically added to history
+
+---
+
+## Phase 2: Social Feed Implementation Plan
+
+### Planned Social Features (Future)
+1. **Feed Tab Addition**
+   - Friends' beer activities and ratings
+   - Follow brewery accounts
+   - Like and comment on beer reviews
+   - Share personal beer discoveries
+
+2. **Enhanced Profile Features**
+   - Public/private profile toggle
+   - Followers and following counts
+   - Share personal lists with friends
+   - Friend recommendations based on similar tastes
+
+3. **Social Discovery**
+   - "Friends are drinking" notifications
+   - Collaborative beer lists
+   - Group brewery visit planning
+   - Social challenges and competitions
+
+### Data Architecture Preparation
+- User relationships (followers/following)
+- Public vs private content flags
+- Activity feed data structure
+- Social interaction tracking
+- Privacy controls framework
+
+---
+
+## Success Metrics (Phase 1)
+
+### User Engagement
+- **Discovery Usage**: 5+ brewery searches per week per active user
+- **Content Creation**: 3+ beer ratings per user per month
+- **List Management**: 80% of users creating at least one custom list
+- **Retention**: 50% 7-day retention, 30% 30-day retention
+
+### Content Quality
+- **Beer Database Growth**: 100+ new beers added per week
+- **Review Quality**: Average review length of 50+ characters
+- **Rating Distribution**: Healthy spread across 1-5 star ratings
+- **Brewery Coverage**: 500+ breweries with user activity
+
+### Feature Adoption
+- **Barcode Scanning**: 60% of users scanning at least one barcode
+- **Location Services**: 70% enabling location for brewery discovery
+- **List Creation**: 40% creating custom beer lists
+- **Brewery Check-ins**: 30% marking breweries as "Been Here"
+
+---
+
+## Technical Considerations (Phase 1)
+
+### Offline Functionality
+- Cache personal beer history for offline viewing
+- Store brewery information for offline reference
+- Queue ratings/reviews for sync when online
+- Download nearby brewery data for offline maps
+
+### Performance Optimizations
+- Lazy loading for brewery search results
+- Image caching for beer photos
+- Smart prefetching of nearby brewery data
+- Efficient local database for personal collections
+
+### Data Sync Strategy
+- Real-time sync for ratings and reviews
+- Background sync for brewery database updates
+- Conflict resolution for offline/online rating changes
+- Backup and restore personal data
+
+This Phase 1 user journey focuses on personal beer discovery and tracking while laying the foundation for future social features. The two-tab architecture provides a complete beer enthusiast experience centered on individual exploration and organization.

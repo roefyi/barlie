@@ -5,6 +5,7 @@ struct DiscoverView: View {
     @State private var searchText = ""
     @State private var selectedTab: DiscoverTab = .forYou
     @State private var isSearching = false
+    @State private var showFilter = false
     @FocusState private var isSearchFocused: Bool
     
     enum DiscoverTab: String, CaseIterable {
@@ -92,7 +93,7 @@ struct DiscoverView: View {
                             
                                 // Filter Button
                                 Button(action: {
-                                    // Handle filter action
+                                    showFilter = true
                                 }) {
                                     Image(systemName: "slider.horizontal.3")
                                         .font(.system(size: 20))
@@ -145,6 +146,12 @@ struct DiscoverView: View {
                 }
             }
         }
+        .sheet(isPresented: $showFilter) {
+            BeerFilterView(
+                selectedStyle: $viewModel.selectedStyle,
+                isPresented: $showFilter
+            )
+        }
     }
     
     private var filteredBeers: [Beer] {
@@ -165,7 +172,7 @@ struct BeerCardView: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(
                     LinearGradient(
-                        gradient: Gradient(colors: [.orange, .yellow]),
+                        gradient: Gradient(colors: [Color(.systemGray4), Color(.systemGray5)]),
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )

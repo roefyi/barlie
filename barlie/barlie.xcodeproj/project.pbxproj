@@ -10,7 +10,9 @@
 		A1234567890ABCDEF1234567 /* BarlieApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890ABCDEF1234566 /* BarlieApp.swift */; };
 		A1234567890ABCDEF1234569 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890ABCDEF1234568 /* ContentView.swift */; };
 		A1234567890ABCDEF123456B /* Beer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890ABCDEF123456A /* Beer.swift */; };
+		A1234567890ABCDEF123456B1 /* BeerStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890ABCDEF123456A1 /* BeerStyle.swift */; };
 		A1234567890ABCDEF123456D /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890ABCDEF123456C /* DiscoverView.swift */; };
+		A1234567890ABCDEF123456D1 /* BeerFilterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890ABCDEF123456C1 /* BeerFilterView.swift */; };
 		A1234567890ABCDEF123456F /* MyBarlieView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890ABCDEF123456E /* MyBarlieView.swift */; };
 		A1234567890ABCDEF1234571 /* BeerRatingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890ABCDEF1234570 /* BeerRatingView.swift */; };
 		A1234567890ABCDEF1234573 /* DiscoverViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890ABCDEF1234572 /* DiscoverViewModel.swift */; };
@@ -26,7 +28,9 @@
 		A1234567890ABCDEF1234566 /* BarlieApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BarlieApp.swift; sourceTree = "<group>"; };
 		A1234567890ABCDEF1234568 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A1234567890ABCDEF123456A /* Beer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Beer.swift; sourceTree = "<group>"; };
+		A1234567890ABCDEF123456A1 /* BeerStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeerStyle.swift; sourceTree = "<group>"; };
 		A1234567890ABCDEF123456C /* DiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverView.swift; sourceTree = "<group>"; };
+		A1234567890ABCDEF123456C1 /* BeerFilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeerFilterView.swift; sourceTree = "<group>"; };
 		A1234567890ABCDEF123456E /* MyBarlieView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyBarlieView.swift; sourceTree = "<group>"; };
 		A1234567890ABCDEF1234570 /* BeerRatingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeerRatingView.swift; sourceTree = "<group>"; };
 		A1234567890ABCDEF1234572 /* DiscoverViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverViewModel.swift; sourceTree = "<group>"; };
@@ -93,6 +97,7 @@
 			isa = PBXGroup;
 			children = (
 				A1234567890ABCDEF123456A /* Beer.swift */,
+				A1234567890ABCDEF123456A1 /* BeerStyle.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -101,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				A1234567890ABCDEF123456C /* DiscoverView.swift */,
+				A1234567890ABCDEF123456C1 /* BeerFilterView.swift */,
 				A1234567890ABCDEF123456E /* MyBarlieView.swift */,
 				A1234567890ABCDEF1234570 /* BeerRatingView.swift */,
 			);
@@ -197,7 +203,9 @@
 			files = (
 				A1234567890ABCDEF1234569 /* ContentView.swift in Sources */,
 				A1234567890ABCDEF123456B /* Beer.swift in Sources */,
+				A1234567890ABCDEF123456B1 /* BeerStyle.swift in Sources */,
 				A1234567890ABCDEF123456D /* DiscoverView.swift in Sources */,
+				A1234567890ABCDEF123456D1 /* BeerFilterView.swift in Sources */,
 				A1234567890ABCDEF123456F /* MyBarlieView.swift in Sources */,
 				A1234567890ABCDEF1234571 /* BeerRatingView.swift in Sources */,
 				A1234567890ABCDEF1234573 /* DiscoverViewModel.swift in Sources */,

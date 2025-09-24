@@ -6,6 +6,8 @@ class DiscoverViewModel: ObservableObject {
     @Published var forYouBeers: [Beer] = []
     @Published var mostLikedBeers: [Beer] = []
     @Published var searchResults: [Beer] = []
+    @Published var filteredBeers: [Beer] = []
+    @Published var selectedStyle: BeerStyle = .all
     
     init() {
         loadBeers()
@@ -44,11 +46,30 @@ class DiscoverViewModel: ObservableObject {
     }
     
     func getBeersForTab(_ tab: DiscoverView.DiscoverTab) -> [Beer] {
+        let baseBeers: [Beer]
         switch tab {
         case .forYou:
-            return forYouBeers
+            baseBeers = forYouBeers
         case .mostLiked:
-            return mostLikedBeers
+            baseBeers = mostLikedBeers
         }
+        
+        return applyFilter(to: baseBeers)
+    }
+    
+    func applyFilter(to beers: [Beer]) -> [Beer] {
+        guard selectedStyle != .all else {
+            return beers
+        }
+        
+        return beers.filter { beer in
+            beer.style.localizedCaseInsensitiveContains(selectedStyle.rawValue)
+        }
+    }
+    
+    func updateFilter(_ style: BeerStyle) {
+        selectedStyle = style
+        // Trigger UI update by updating filtered results
+        filteredBeers = applyFilter(to: allBeers)
     }
 }
