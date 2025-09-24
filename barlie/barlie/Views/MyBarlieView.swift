@@ -65,16 +65,17 @@ struct MyBarlieView: View {
                     .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
                         scrollOffset = value
                         withAnimation(.easeInOut(duration: 0.3)) {
-                            showCompactHeader = value < -50
+                            showCompactHeader = value < -30
                         }
                         print("Scroll offset: \(value), showCompact: \(showCompactHeader)")
                     }
                 }
                 
                 // Navigation Bar (appears when scrolling)
-                if showCompactHeader && !isSearching {
+                if showCompactHeader {
                     CompactNavigationBarView(isSearching: $isSearching)
                         .transition(.move(edge: .top).combined(with: .opacity))
+                        .zIndex(1)
                 }
                 
                 // Full-Screen Search Overlay
