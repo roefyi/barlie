@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barlie - Beer Rating & Discovery</title>
+    <link rel="stylesheet" href="styles.css?v=3.2">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1 class="app-title" id="page-title">
+                    Discover
+                </h1>
+                <div class="user-avatar">
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Search Tab -->
+            <div id="search-tab" class="tab-content active">
+                <!-- Search Section -->
+                <section class="search-section">
+                    <div class="search-bar-container">
+                    <div class="search-input-wrapper">
+                        <div class="search-sphere"></div>
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="search-input" placeholder="Ask a question about this beer..." class="search-input">
+                        <button id="clear-search" class="clear-search-btn">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <div class="ai-branding">
+                            <span class="ai-icon">AI</span>
+                            <span class="ai-text">Barlie Copilot</span>
+                        </div>
+                    </div>
+                        <button id="barcode-scanner" class="barcode-btn">
+                            <i class="fas fa-barcode"></i>
+                        </button>
+                    </div>
+
+                    <!-- Quick Categories -->
+                    <div class="quick-categories">
+                        <button class="category-btn active" data-category="all">
+                            <i class="fas fa-beer"></i>
+                            All Beers
+                        </button>
+                        <button class="category-btn" data-category="ipa">
+                            <i class="fas fa-leaf"></i>
+                            IPA
+                        </button>
+                        <button class="category-btn" data-category="stout">
+                            <i class="fas fa-coffee"></i>
+                            Stout
+                        </button>
+                        <button class="category-btn" data-category="lager">
+                            <i class="fas fa-snowflake"></i>
+                            Lager
+                        </button>
+                        <button class="category-btn" data-category="pilsner">
+                            <i class="fas fa-tint"></i>
+                            Pilsner
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Results Section -->
+                <section class="results-section">
+                    <div id="search-results" class="results-container">
+                        <!-- All Beers (Default) -->
+                        <div id="all-beers" class="results-grid">
+                            <h2 class="section-title">All Beers</h2>
+                            <!-- Dynamic beer results will be populated here -->
+                        </div>
+
+                    </div>
+                </section>
+            </div>
+
+            <!-- Profile Tab -->
+            <div id="profile-tab" class="tab-content">
+                <!-- Profile Header -->
+                <section class="profile-header-new">
+                    <div class="profile-avatar-large">
+                        <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjMDA3QUZGIi8+CjxwYXRoIGQ9Ik00MCA2MEM0MCA0Ni43NDUyIDUwLjc0NTIgMzYgNjQgMzZDNzcuMjU0OCAzNiA4OCA0Ni43NDUyIDg4IDYwVjgwSDQwVjYwWiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTMwIDkwQzMwIDc4LjQwNDYgMzkuNDA0NiA2OSA1MSA2OUg3N0M4OC41OTU0IDY5IDk4IDc4LjQwNDYgOTggOTBWOTJIMzBWOTBaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K" alt="Profile" class="profile-image">
+                    </div>
+                    <div class="profile-info-new">
+                        <h2 class="profile-name-new">Rome</h2>
+                        <p class="profile-handle">@beerlover</p>
+                    </div>
+                </section>
+
+                <!-- User Stats Bar -->
+                <section class="user-stats-bar">
+                    <div class="stat-item">
+                        <span class="stat-number-new">47</span>
+                        <span class="stat-label-new">Beers Rated</span>
+                    </div>
+                </section>
+
+                <!-- Action Buttons -->
+                <section class="action-buttons-new">
+                    <button class="action-btn-new">
+                        <i class="fas fa-bell"></i>
+                        Activity
+                    </button>
+                    <button class="action-btn-new">
+                        <i class="fas fa-share"></i>
+                        Share
+                    </button>
+                    <button class="action-btn-new">
+                        <i class="fas fa-cog"></i>
+                        Settings
+                    </button>
+                </section>
+
+                <!-- Content Categories -->
+                <section class="content-categories">
+                    <div class="category-item active">
+                        <i class="fas fa-clock"></i>
+                        <span>Next</span>
+                    </div>
+                    <div class="category-item">
+                        <i class="fas fa-check"></i>
+                        <span>Drank</span>
+                    </div>
+                    <div class="category-item">
+                        <i class="fas fa-list"></i>
+                        <span>Lists</span>
+                    </div>
+                </section>
+
+                <!-- Beer Grid -->
+                <section class="beer-grid-section">
+                    <div class="beer-grid">
+                        <div class="beer-card-new" data-beer-id="1">
+                            <div class="beer-poster">
+                                <div class="beer-image-placeholder">
+                                    <i class="fas fa-beer"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="beer-card-new" data-beer-id="2">
+                            <div class="beer-poster">
+                                <div class="beer-image-placeholder">
+                                    <i class="fas fa-beer"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="beer-card-new" data-beer-id="3">
+                            <div class="beer-poster">
+                                <div class="beer-image-placeholder">
+                                    <i class="fas fa-beer"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="beer-card-new" data-beer-id="4">
+                            <div class="beer-poster">
+                                <div class="beer-image-placeholder">
+                                    <i class="fas fa-beer"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="add-more-card">
+                            <div class="add-more-placeholder">
+                                <i class="fas fa-plus"></i>
+                                <span>Add more</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-tab="search">
+                <i class="fas fa-search"></i>
+                <span>Discover</span>
+            </button>
+            <button class="nav-item" data-tab="profile">
+                <i class="fas fa-user"></i>
+                <span>My Barlie</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Beer Detail Modal -->
+    <div id="beer-detail-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-beer-name">Beer Name</h3>
+                <button class="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="beer-image-large">
+                    <i class="fas fa-beer"></i>
+                </div>
+                <div class="beer-details">
+                    <p class="brewery-name">Brewery Name</p>
+                    <p class="beer-style">Beer Style • ABV%</p>
+                    <div class="beer-description">
+                        Rich, malty flavor with hints of chocolate and coffee. Perfect for a cold evening.
+                    </div>
+                </div>
+                <div class="rating-section">
+                    <h4>Your Rating</h4>
+                    <div class="star-rating">
+                        <button class="star-btn" data-rating="1">
+                            <i class="far fa-star"></i>
+                        </button>
+                        <button class="star-btn" data-rating="2">
+                            <i class="far fa-star"></i>
+                        </button>
+                        <button class="star-btn" data-rating="3">
+                            <i class="far fa-star"></i>
+                        </button>
+                        <button class="star-btn" data-rating="4">
+                            <i class="far fa-star"></i>
+                        </button>
+                        <button class="star-btn" data-rating="5">
+                            <i class="far fa-star"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="review-section">
+                    <h4>Your Review</h4>
+                    <textarea id="review-text" placeholder="Share your thoughts about this beer..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button class="save-rating-btn">Save Rating</button>
+                    <button class="add-to-list-btn">Add to List</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barcode Scanner Modal -->
+    <div id="barcode-modal" class="modal">
+        <div class="modal-content barcode-modal">
+            <div class="modal-header">
+                <h3>Scan Beer Barcode</h3>
+                <button class="close-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="scanner-preview">
+                    <div class="scanner-frame">
+                        <i class="fas fa-camera"></i>
+                        <p>Point camera at beer barcode</p>
+                    </div>
+                </div>
+                <div class="scanner-actions">
+                    <button class="scan-btn">
+                        <i class="fas fa-barcode"></i>
+                        Scan Barcode
+                    </button>
+                    <button class="manual-entry-btn">
+                        <i class="fas fa-keyboard"></i>
+                        Manual Entry
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=1.2"></script>
+</body>
+</html>
