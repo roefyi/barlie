@@ -8,6 +8,7 @@ struct MyBarlieView: View {
     @State private var searchText = ""
     @State private var isSearching = false
     @FocusState private var isSearchFocused: Bool
+    @State private var headerHeight: CGFloat = 0
     
     enum ProfileTab: String, CaseIterable {
         case next = "Next"
@@ -21,53 +22,75 @@ struct MyBarlieView: View {
                 // Scrollable Content
                 ScrollViewReader { proxy in
                     ScrollView {
-                        GeometryReader { geometry in
-                            Color.clear.preference(
-                                key: ScrollOffsetPreferenceKey.self,
-                                value: geometry.frame(in: .named("scroll")).minY
-                            )
-                        }
-                        .frame(height: 0)
-                        .id("top")
-                        
-                        VStack(spacing: 0) {
-                        // Profile Header
-                        ProfileHeaderView(isSearching: $isSearching)
-                            .opacity(showCompactHeader ? 0 : 1)
-                        
-                        // User Stats
-                        UserStatsView()
-                            .padding(.bottom, 16)
-                        
-                        // Action Buttons
-                        ActionButtonsView()
-                            .padding(.bottom, 16)
-                        
-                        // Tab Selector
-                        ProfileTabSelector(selectedTab: $selectedTab)
-                            .padding(.bottom, 16)
-                        
-                        // Content based on selected tab
-                        Group {
-                            switch selectedTab {
-                            case .next:
-                                NextBeersGridView(viewModel: viewModel)
-                            case .drank:
-                                DrankBeersGridView(viewModel: viewModel)
-                            case .lists:
-                                ListsView(viewModel: viewModel)
+                        LazyVStack(spacing: 0) {
+                            // Profile Header
+                            ProfileHeaderView(isSearching: $isSearching)
+                                .opacity(showCompactHeader ? 0 : 1)
+                                .background(
+                                    GeometryReader { geometry in
+                                        Color.clear
+                                            .onAppear {
+                                                headerHeight = geometry.size.height
+                                            }
+                                            .onChange(of: geometry.frame(in: .global).minY) { newValue in
+                                                // More reliable scroll detection
+                                                let threshold: CGFloat = headerHeight > 0 ? headerHeight * 0.3 : 60
+                                                let shouldShowCompact = newValue < -threshold
+                                                
+                                                if shouldShowCompact != showCompactHeader {
+                                                    withAnimation(.easeInOut(duration: 0.25)) {
+                                                        showCompactHeader = shouldShowCompact
+                                                    }
+                                                }
+                                            }
+                                            .preference(
+                                                key: ScrollOffsetPreferenceKey.self,
+                                                value: geometry.frame(in: .global).minY
+                                            )
+                                    }
+                                )
+                            
+                            // User Stats
+                            UserStatsView()
+                                .padding(.bottom, 16)
+                            
+                            // Action Buttons
+                            ActionButtonsView()
+                                .padding(.bottom, 16)
+                            
+                            // Tab Selector
+                            ProfileTabSelector(selectedTab: $selectedTab)
+                                .padding(.bottom, 16)
+                            
+                            // Content based on selected tab
+                            Group {
+                                switch selectedTab {
+                                case .next:
+                                    NextBeersGridView(viewModel: viewModel)
+                                case .drank:
+                                    DrankBeersGridView(viewModel: viewModel)
+                                case .lists:
+                                    ListsView(viewModel: viewModel)
+                                }
                             }
-                        }
-                        .animation(.easeInOut(duration: 0.3), value: selectedTab)
+                            .animation(.easeInOut(duration: 0.3), value: selectedTab)
                         }
                     }
-                    .coordinateSpace(name: "scroll")
                     .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
-                        scrollOffset = value
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            showCompactHeader = value < -30
+                        // Use a more reliable threshold based on header height
+                        let threshold: CGFloat = headerHeight > 0 ? headerHeight * 0.3 : 60
+                        let shouldShowCompact = value < -threshold
+                        
+                        // Add hysteresis to prevent flickering
+                        let currentState = showCompactHeader
+                        let newState = shouldShowCompact
+                        
+                        if currentState != newState {
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                showCompactHeader = newState
+                            }
                         }
-                        print("Scroll offset: \(value), showCompact: \(showCompactHeader)")
+                        print("Scroll offset: \(value), threshold: \(threshold), showCompact: \(showCompactHeader)")
                     }
                 }
                 
@@ -200,8 +223,11 @@ struct CompactNavigationBarView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
-        .background(Color.black.opacity(0.95))
-        .blur(radius: 0.5)
+        .background(
+            Color.black
+                .ignoresSafeArea(.container, edges: .top)
+        )
+        .shadow(color: .black.opacity(0.1), radius: 1, x: 0, y: 1)
     }
 }
 
