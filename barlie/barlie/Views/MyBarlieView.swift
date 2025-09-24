@@ -125,7 +125,7 @@ struct MyBarlieView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 60) // Account for status bar
                         .padding(.bottom, 12)
-                         .background(Color(red: 42/255, green: 42/255, blue: 42/255))
+                         .background(Color.black)
                         .onAppear {
                             // Set focus when search overlay appears
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -149,7 +149,7 @@ struct MyBarlieView: View {
                             }
                         }
                     }
-                         .background(Color(red: 42/255, green: 42/255, blue: 42/255))
+                         .background(Color.black)
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
@@ -199,7 +199,7 @@ struct CompactNavigationBarView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
-        .background(Color(red: 42/255, green: 42/255, blue: 42/255).opacity(0.95))
+        .background(Color.black.opacity(0.95))
         .blur(radius: 0.5)
     }
 }
@@ -251,7 +251,7 @@ struct ProfileHeaderView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 20)
-                         .background(Color(red: 42/255, green: 42/255, blue: 42/255))
+                         .background(Color.black)
     }
 }
 
@@ -346,7 +346,7 @@ struct ProfileTabSelector: View {
             }
         }
         .padding(.horizontal, 20)
-                         .background(Color(red: 42/255, green: 42/255, blue: 42/255))
+                         .background(Color.black)
     }
 }
 
@@ -466,7 +466,7 @@ struct ListCardView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
-                         .background(Color(red: 42/255, green: 42/255, blue: 42/255))
+                         .background(Color.black)
         .overlay(
             Rectangle()
                 .frame(height: 0.5)
@@ -502,7 +502,7 @@ struct CreateNewListView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
-                         .background(Color(red: 42/255, green: 42/255, blue: 42/255))
+                         .background(Color.black)
         .overlay(
             Rectangle()
                 .frame(height: 0.5)

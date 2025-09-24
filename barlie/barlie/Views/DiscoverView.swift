@@ -47,7 +47,7 @@ struct DiscoverView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.vertical, 20)
-                    .background(Color(red: 42/255, green: 42/255, blue: 42/255))
+                    .background(Color.black)
                     
                     // Tab Slider (when not searching)
                     DiscoverTabSelector(selectedTab: $selectedTab)
@@ -117,7 +117,7 @@ struct DiscoverView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 60) // Account for status bar
                         .padding(.bottom, 12)
-                        .background(Color(red: 42/255, green: 42/255, blue: 42/255))
+                        .background(Color.black)
                         
                         // Search Tab Slider
                         DiscoverTabSelector(selectedTab: $selectedTab)
@@ -140,7 +140,7 @@ struct DiscoverView: View {
                             }
                         }
                     }
-                    .background(Color(red: 42/255, green: 42/255, blue: 42/255))
+                    .background(Color.black)
                     .transition(.move(edge: .top).combined(with: .opacity))
                 }
             }
@@ -202,7 +202,7 @@ struct BeerCardView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
-                         .background(Color(red: 42/255, green: 42/255, blue: 42/255))
+                         .background(Color.black)
         .overlay(
             Rectangle()
                 .frame(height: 0.5)
@@ -239,7 +239,7 @@ struct DiscoverTabSelector: View {
             }
         }
         .padding(.horizontal, 20)
-                         .background(Color(red: 42/255, green: 42/255, blue: 42/255))
+                         .background(Color.black)
         .gesture(
             DragGesture()
                 .onEnded { value in
