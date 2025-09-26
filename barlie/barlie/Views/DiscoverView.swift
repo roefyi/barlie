@@ -82,7 +82,7 @@ struct DiscoverView: View {
                                 TextField("Search for beers, breweries, or styles", text: $searchText)
                                     .textFieldStyle(PlainTextFieldStyle())
                                     .focused($isSearchFocused)
-                                    .onChange(of: searchText) { newValue in
+                                    .onChange(of: searchText) { _, newValue in
                                         viewModel.searchBeers(query: newValue)
                                     }
                             }
