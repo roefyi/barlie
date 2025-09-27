@@ -111,22 +111,21 @@ struct MyBarlieView: View {
         lastScrollTime = currentTime
         scrollOffset = offset
         
-        // Immediate threshold with velocity-based animation
+        // Immediate threshold with very slow, visible animation
         let threshold: CGFloat = 0  // Trigger immediately on any scroll
         
         let shouldCollapse = offset < threshold
         
         if shouldCollapse != isHeaderCollapsed {
-            // Calculate animation response based on scroll velocity
-            // Faster scroll = faster animation, slower scroll = slower animation
-            let baseResponse: CGFloat = 0.3
-            let velocityFactor = min(max(scrollVelocity * 0.1, 0.1), 2.0) // Clamp between 0.1 and 2.0
+            // Much slower animation so users can see the collapse happening
+            let baseResponse: CGFloat = 3.0  // Much slower base response
+            let velocityFactor = min(max(scrollVelocity * 0.05, 0.3), 1.5) // Slower velocity factor
             let dynamicResponse = baseResponse / velocityFactor
             
             withAnimation(.interactiveSpring(
                 response: dynamicResponse, 
-                dampingFraction: 0.7, 
-                blendDuration: 0.05
+                dampingFraction: 0.8, 
+                blendDuration: 0.3
             )) {
                 isHeaderCollapsed = shouldCollapse
             }
@@ -349,14 +348,14 @@ struct ActionButtonsView: View {
     var body: some View {
         HStack(spacing: 12) {
             ActionButtonView(
-                title: "Add Beer",
-                icon: "plus",
+                title: "Share Profile",
+                icon: "square.and.arrow.up",
                 action: {}
             )
             
             ActionButtonView(
-                title: "Scan",
-                icon: "qrcode.viewfinder",
+                title: "Settings",
+                icon: "gearshape",
                 action: {}
             )
         }
@@ -371,18 +370,18 @@ struct ActionButtonView: View {
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
                 
                 Text(title)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))
             }
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(Color.blue)
-            .cornerRadius(8)
+            .foregroundColor(.primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color(.systemGray5))
+            .cornerRadius(6)
         }
     }
 }
@@ -459,19 +458,28 @@ struct NextBeersGridView: View {
     @ObservedObject var viewModel: MyBarlieViewModel
     
     var body: some View {
-        LazyVGrid(columns: [
-            GridItem(.flexible()),
-            GridItem(.flexible())
-        ], spacing: 16) {
-            ForEach(0..<12, id: \.self) { index in
-                ProfileBeerCardView(
-                    title: "Beer \(index + 1)",
-                    brewery: "Brewery \(index + 1)",
-                    style: "IPA"
-                )
+        GeometryReader { geometry in
+            let screenWidth = geometry.size.width
+            let cellWidth = screenWidth / 4
+            
+            VStack(spacing: 0) {
+                ForEach(0..<3, id: \.self) { row in
+                    HStack(spacing: 0) {
+                        ForEach(0..<4, id: \.self) { column in
+                            let index = row * 4 + column
+                            if index < 12 {
+                                ProfileBeerCardView(
+                                    title: "Beer \(index + 1)",
+                                    brewery: "Brewery \(index + 1)",
+                                    style: "IPA"
+                                )
+                                .frame(width: cellWidth, height: cellWidth)
+                            }
+                        }
+                    }
+                }
             }
         }
-        .padding(.horizontal, 20)
     }
 }
 
@@ -479,19 +487,28 @@ struct DrankBeersGridView: View {
     @ObservedObject var viewModel: MyBarlieViewModel
     
     var body: some View {
-        LazyVGrid(columns: [
-            GridItem(.flexible()),
-            GridItem(.flexible())
-        ], spacing: 16) {
-            ForEach(0..<47, id: \.self) { index in
-                ProfileBeerCardView(
-                    title: "Drank Beer \(index + 1)",
-                    brewery: "Brewery \(index + 1)",
-                    style: "Stout"
-                )
+        GeometryReader { geometry in
+            let screenWidth = geometry.size.width
+            let cellWidth = screenWidth / 4
+            
+            VStack(spacing: 0) {
+                ForEach(0..<12, id: \.self) { row in
+                    HStack(spacing: 0) {
+                        ForEach(0..<4, id: \.self) { column in
+                            let index = row * 4 + column
+                            if index < 47 {
+                                ProfileBeerCardView(
+                                    title: "Drank Beer \(index + 1)",
+                                    brewery: "Brewery \(index + 1)",
+                                    style: "Stout"
+                                )
+                                .frame(width: cellWidth, height: cellWidth)
+                            }
+                        }
+                    }
+                }
             }
         }
-        .padding(.horizontal, 20)
     }
 }
 
@@ -519,33 +536,22 @@ struct ProfileBeerCardView: View {
     let style: String
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Beer image placeholder
-            Rectangle()
-                .fill(Color.gray.opacity(0.3))
-                .frame(height: 120)
-                .cornerRadius(8)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(size: 14, weight: .semibold))
+        // Very visible gradient placeholder for testing
+        Rectangle()
+            .fill(
+                LinearGradient(
+                    gradient: Gradient(colors: [.red, .orange, .yellow, .green, .blue, .purple]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .aspectRatio(1, contentMode: .fit)
+            .overlay(
+                Text("\(title)")
+                    .font(.caption)
                     .foregroundColor(.white)
-                    .lineLimit(1)
-                
-                Text(brewery)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-                
-                Text(style)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.blue)
-                    .lineLimit(1)
-            }
-        }
-        .padding(12)
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
+                    .fontWeight(.bold)
+            )
     }
 }
 
@@ -554,22 +560,30 @@ struct ListCardView: View {
     let count: String
     
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 12) {
             // List icon
-            Image(systemName: "list.bullet")
-                .font(.system(size: 24))
-                .foregroundColor(.blue)
-                .frame(width: 40, height: 40)
-                .background(Color.blue.opacity(0.1))
-                .cornerRadius(8)
+            RoundedRectangle(cornerRadius: 8)
+                .fill(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color(.systemGray4), Color(.systemGray5)]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 60, height: 80)
+                .overlay(
+                    Image(systemName: "list.bullet")
+                        .font(.system(size: 24))
+                        .foregroundColor(.secondary)
+                )
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
                 
                 Text(count)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 14))
                     .foregroundColor(.secondary)
             }
             
@@ -579,9 +593,9 @@ struct ListCardView: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.secondary)
         }
-        .padding(16)
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .background(Color.black)
     }
 }
 
