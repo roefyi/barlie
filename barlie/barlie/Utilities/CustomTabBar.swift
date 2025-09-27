@@ -35,12 +35,6 @@ struct CustomTabBar: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
         .background(Color.black)
-        .overlay(
-            Rectangle()
-                .frame(height: 0.5)
-                .foregroundColor(Color(.separator)),
-            alignment: .top
-        )
     }
 }
 

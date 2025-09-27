@@ -36,7 +36,7 @@ struct DiscoverView: View {
                         Spacer()
                         
                         Text("Discover")
-                            .font(.system(size: 34, weight: .bold))
+                            .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.white)
                             .padding(.top, 2)
                         
@@ -51,18 +51,20 @@ struct DiscoverView: View {
                     .background(Color.black)
                     
                     // Tab Slider (when not searching)
-                    DiscoverTabSelector(selectedTab: $selectedTab)
-                        .padding(.top, 16)
-                        .padding(.bottom, 16)
+                    if !isSearching {
+                        DiscoverTabSelector(selectedTab: $selectedTab)
+                            .padding(.top, 16)
+                            .padding(.bottom, 16)
+                    }
                     
-                    // Beer Results
+                    // Content based on selected tab
                     ScrollView {
                         LazyVStack(spacing: 0) {
-                            ForEach(filteredBeers) { beer in
-                                BeerCardView(beer: beer)
-                                    .onTapGesture {
-                                        // Handle beer selection
-                                    }
+                            switch selectedTab {
+                            case .forYou:
+                                ForYouTabView()
+                            case .mostLiked:
+                                MostLikedTabView()
                             }
                         }
                     }
@@ -120,10 +122,6 @@ struct DiscoverView: View {
                         .padding(.bottom, 12)
                         .background(Color.black)
                         
-                        // Search Tab Slider
-                        DiscoverTabSelector(selectedTab: $selectedTab)
-                            .padding(.bottom, 12)
-                        
                         // Content Area - Blank until text is typed
                         if searchText.isEmpty {
                             Spacer()
@@ -133,9 +131,6 @@ struct DiscoverView: View {
                                 LazyVStack(spacing: 0) {
                                     ForEach(viewModel.searchResults) { beer in
                                         BeerCardView(beer: beer)
-                                            .onTapGesture {
-                                                // Handle beer selection
-                                            }
                                     }
                                 }
                             }
@@ -154,69 +149,65 @@ struct DiscoverView: View {
         }
     }
     
-    private var filteredBeers: [Beer] {
-        if searchText.isEmpty {
-            return viewModel.getBeersForTab(selectedTab)
-        } else {
-            return viewModel.searchResults
-        }
-    }
 }
 
 struct BeerCardView: View {
     let beer: Beer
     
     var body: some View {
-        HStack(spacing: 12) {
-            // Beer Image Placeholder
-            RoundedRectangle(cornerRadius: 8)
-                .fill(
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color(.systemGray4), Color(.systemGray5)]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
+        NavigationLink(destination: BeerDetailView(beer: beer)) {
+            HStack(spacing: 12) {
+                // Beer Image Placeholder
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color(.systemGray4), Color(.systemGray5)]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
                     )
-                )
-                .frame(width: 60, height: 80)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(beer.name)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
+                    .frame(width: 60, height: 80)
                 
-                Text(beer.brewery)
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(beer.name)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primary)
+                    
+                    Text(beer.brewery)
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                    
+                    Text(beer.styleAndABV)
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                }
                 
-                Text(beer.styleAndABV)
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
+                Spacer()
+                
+                Button(action: {
+                    // Handle +Next action
+                }) {
+                    Text("+Next")
+                        .font(.system(size: 12, weight: .medium))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color(.systemGray5))
+                        .foregroundColor(.primary)
+                        .cornerRadius(6)
+                }
             }
-            
-            Spacer()
-            
-            Button(action: {
-                // Handle +Next action
-            }) {
-                Text("+Next")
-                    .font(.system(size: 12, weight: .medium))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color(.systemGray5))
-                    .foregroundColor(.primary)
-                    .cornerRadius(6)
-            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+                             .background(Color.black)
+            .overlay(
+                Rectangle()
+                    .frame(height: 0.5)
+                    .foregroundColor(Color(.separator))
+                    .offset(y: 16),
+                alignment: .bottom
+            )
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
-                         .background(Color.black)
-        .overlay(
-            Rectangle()
-                .frame(height: 0.5)
-                .foregroundColor(Color(.separator))
-                .offset(y: 16),
-            alignment: .bottom
-        )
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
@@ -274,6 +265,32 @@ struct DiscoverTabSelector: View {
                     }
                 }
         )
+    }
+}
+
+// MARK: - Tab Content Views
+
+struct ForYouTabView: View {
+    @StateObject private var viewModel = DiscoverViewModel()
+    
+    var body: some View {
+        LazyVStack(spacing: 0) {
+            ForEach(viewModel.forYouBeers) { beer in
+                BeerCardView(beer: beer)
+            }
+        }
+    }
+}
+
+struct MostLikedTabView: View {
+    @StateObject private var viewModel = DiscoverViewModel()
+    
+    var body: some View {
+        LazyVStack(spacing: 0) {
+            ForEach(viewModel.mostLikedBeers) { beer in
+                BeerCardView(beer: beer)
+            }
+        }
     }
 }
 

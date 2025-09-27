@@ -22,8 +22,8 @@ struct MyBarlieView: View {
         NavigationView {
             ZStack(alignment: .top) {
                 // Main scrollable content
-                ScrollView {
-                    LazyVStack(spacing: 0) {
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
                         // Header with scroll detection
                         GeometryReader { geometry in
                             CollapsingHeaderView(
@@ -46,32 +46,32 @@ struct MyBarlieView: View {
                         
                         
                         // User stats
-                        UserStatsView()
-                            .padding(.bottom, 16)
-                        
+                            UserStatsView()
+                                .padding(.bottom, 16)
+                            
                         // Action buttons
-                        ActionButtonsView()
-                            .padding(.bottom, 16)
-                        
+                            ActionButtonsView()
+                                .padding(.bottom, 16)
+                            
                         // Tab selector
-                        ProfileTabSelector(selectedTab: $selectedTab)
-                            .padding(.bottom, 16)
+                            ProfileTabSelector(selectedTab: $selectedTab)
+                                .padding(.bottom, 16)
                             .background(Color.black)
-                        
-                        // Content based on selected tab
+                            
+                            // Content based on selected tab
                         VStack(spacing: 0) {
-                            switch selectedTab {
-                            case .next:
-                                NextBeersGridView(viewModel: viewModel)
-                            case .drank:
-                                DrankBeersGridView(viewModel: viewModel)
-                            case .lists:
-                                ListsView(viewModel: viewModel)
+                                switch selectedTab {
+                                case .next:
+                                    NextBeersGridView(viewModel: viewModel)
+                                case .drank:
+                                    DrankBeersGridView(viewModel: viewModel)
+                                case .lists:
+                                    ListsView(viewModel: viewModel)
+                                }
                             }
+                            .animation(.easeInOut(duration: 0.3), value: selectedTab)
                         }
-                        .animation(.easeInOut(duration: 0.3), value: selectedTab)
                     }
-                }
                 
                 // Compact navigation bar overlay
                 CompactNavigationBarView(isSearching: $isSearching)
@@ -394,61 +394,77 @@ struct SearchOverlayView: View {
     @FocusState.Binding var isSearchFocused: Bool
     
     var body: some View {
-        ZStack {
-            // Background
-            Color.black.opacity(0.95)
-                .ignoresSafeArea()
-            
-            VStack(spacing: 20) {
-                // Search bar
-                HStack(spacing: 12) {
-                    Button(action: {
-                        withAnimation(.easeInOut(duration: 0.3)) {
-                            isSearching = false
-                            isSearchFocused = false
-                        }
-                    }) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(.white)
-                            .frame(width: 44, height: 44)
-                    }
-                    
-                    HStack(spacing: 8) {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
-                        
-                        TextField("Search for beers, breweries, or styles", text: $searchText)
-                            .textFieldStyle(PlainTextFieldStyle())
-                            .focused($isSearchFocused)
-                            .onChange(of: searchText) { _, newValue in
-                                // Handle search in profile context
+                    VStack(spacing: 0) {
+            // Search Bar with Filter and Cancel (matching Discover page)
+                        HStack {
+                            HStack {
+                                Image(systemName: "magnifyingglass")
+                                    .foregroundColor(.secondary)
+                                
+                                TextField("Search for beers, breweries, or styles", text: $searchText)
+                                    .textFieldStyle(PlainTextFieldStyle())
+                                    .focused($isSearchFocused)
+                        .onChange(of: searchText) { _, newValue in
+                                        // Handle search in profile context
+                                    }
                             }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                            
+                                // Filter Button
+                                Button(action: {
+                                    // Handle filter action
+                                }) {
+                                    Image(systemName: "slider.horizontal.3")
+                                        .font(.system(size: 20))
+                                        .foregroundColor(.white)
+                                }
+                            .padding(.leading, 8)
+                            
+                            // Cancel Button
+                            Button(action: {
+                                withAnimation(.easeInOut(duration: 0.3)) {
+                                    isSearching = false
+                                    isSearchFocused = false
+                                    searchText = ""
+                                }
+                            }) {
+                                Text("Cancel")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 16))
+                            }
+                            .padding(.leading, 8)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 60) // Account for status bar
+                        .padding(.bottom, 12)
+                         .background(Color.black)
+                        
+                        // Content Area - Blank until text is typed
+                        if searchText.isEmpty {
+                            Spacer()
+                        } else {
+                // Search Results
+                            ScrollView {
+                                LazyVStack(spacing: 0) {
+                        // Placeholder for search results
+                        VStack(spacing: 16) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 48))
+                                .foregroundColor(.secondary)
+                            
+                            Text("Search for beers, breweries, or styles")
+                                .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(.secondary)
+                        }
+                        .padding(.top, 100)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-                
-                Spacer()
-                
-                // Search results placeholder
-                VStack(spacing: 16) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
-                    
-                    Text("Search for beers, breweries, or styles")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.secondary)
-                }
-                
-                Spacer()
             }
         }
+        .background(Color.black)
     }
 }
 
@@ -467,13 +483,9 @@ struct NextBeersGridView: View {
                     HStack(spacing: 0) {
                         ForEach(0..<4, id: \.self) { column in
                             let index = row * 4 + column
-                            if index < 12 {
-                                ProfileBeerCardView(
-                                    title: "Beer \(index + 1)",
-                                    brewery: "Brewery \(index + 1)",
-                                    style: "IPA"
-                                )
-                                .frame(width: cellWidth, height: cellWidth)
+                            if index < Beer.sampleBeers.count {
+                                ProfileBeerCardView(beer: Beer.sampleBeers[index])
+                                    .frame(width: cellWidth, height: cellWidth)
                             }
                         }
                     }
@@ -496,13 +508,9 @@ struct DrankBeersGridView: View {
                     HStack(spacing: 0) {
                         ForEach(0..<4, id: \.self) { column in
                             let index = row * 4 + column
-                            if index < 47 {
-                                ProfileBeerCardView(
-                                    title: "Drank Beer \(index + 1)",
-                                    brewery: "Brewery \(index + 1)",
-                                    style: "Stout"
-                                )
-                                .frame(width: cellWidth, height: cellWidth)
+                            if index < Beer.sampleBeers.count {
+                                ProfileBeerCardView(beer: Beer.sampleBeers[index])
+                                    .frame(width: cellWidth, height: cellWidth)
                             }
                         }
                     }
@@ -531,27 +539,28 @@ struct ListsView: View {
 // MARK: - Card Views
 
 struct ProfileBeerCardView: View {
-    let title: String
-    let brewery: String
-    let style: String
+    let beer: Beer
     
     var body: some View {
-        // Very visible gradient placeholder for testing
+        NavigationLink(destination: BeerDetailView(beer: beer)) {
+            // Very visible gradient placeholder for testing
         Rectangle()
             .fill(
                 LinearGradient(
-                    gradient: Gradient(colors: [.red, .orange, .yellow, .green, .blue, .purple]),
+                        gradient: Gradient(colors: [.red, .orange, .yellow, .green, .blue, .purple]),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
             .aspectRatio(1, contentMode: .fit)
             .overlay(
-                Text("\(title)")
-                    .font(.caption)
-                    .foregroundColor(.white)
-                    .fontWeight(.bold)
-            )
+                    Text("\(beer.name)")
+                        .font(.caption)
+                        .foregroundColor(.white)
+                        .fontWeight(.bold)
+                )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 
@@ -595,7 +604,119 @@ struct ListCardView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
-        .background(Color.black)
+                         .background(Color.black)
+    }
+}
+
+// MARK: - Beer Detail View
+
+struct BeerDetailView: View {
+    let beer: Beer
+    
+    var body: some View {
+        ZStack {
+            Color.black
+                .ignoresSafeArea()
+            
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Beer Image
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(colors: [.red, .orange, .yellow, .green, .blue, .purple]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 200, height: 200)
+                        .cornerRadius(16)
+                        .padding(.top, 40)
+                    
+                    // Beer Information
+                    VStack(alignment: .leading, spacing: 16) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(beer.name)
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundColor(.white)
+                            
+                            Text(beer.brewery)
+                                .font(.system(size: 20, weight: .medium))
+                                .foregroundColor(.secondary)
+                            
+                            Text(beer.style)
+                                .font(.system(size: 16, weight: .regular))
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
+                        }
+                        
+                        Divider()
+                            .background(Color(.systemGray3))
+                        
+                        // Beer Details Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Details")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(.white)
+                            
+                            VStack(alignment: .leading, spacing: 8) {
+                                DetailRow(title: "ABV", value: "\(beer.abv)%")
+                                DetailRow(title: "IBU", value: "\(beer.ibu)")
+                                DetailRow(title: "Color", value: beer.color)
+                                DetailRow(title: "Type", value: beer.style)
+                            }
+                        }
+                        
+                        Divider()
+                            .background(Color(.systemGray3))
+                        
+                        // Description Section
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Description")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(.white)
+                            
+                            Text(beer.description)
+                                .font(.system(size: 16))
+                                .foregroundColor(.secondary)
+                                .lineSpacing(4)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 40)
+                }
+            }
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Beer Details")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.white)
+            }
+        }
+    }
+}
+
+struct DetailRow: View {
+    let title: String
+    let value: String
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.white)
+            
+            Spacer()
+            
+            Text(value)
+                .font(.system(size: 16))
+                .foregroundColor(.secondary)
+        }
     }
 }
 
