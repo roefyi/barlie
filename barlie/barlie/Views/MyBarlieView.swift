@@ -3,12 +3,14 @@ import SwiftUI
 struct MyBarlieView: View {
     @StateObject private var viewModel = MyBarlieViewModel()
     @State private var selectedTab: ProfileTab = .next
-    @State private var scrollOffset: CGFloat = 0
-    @State private var showCompactHeader = false
+    @State private var isHeaderCollapsed = false
     @State private var searchText = ""
     @State private var isSearching = false
     @FocusState private var isSearchFocused: Bool
-    @State private var headerHeight: CGFloat = 0
+    @State private var scrollOffset: CGFloat = 0
+    @State private var lastScrollTime: Date = Date()
+    @State private var scrollVelocity: CGFloat = 0
+    @State private var headerHeight: CGFloat = 200
     
     enum ProfileTab: String, CaseIterable {
         case next = "Next"
@@ -19,237 +21,186 @@ struct MyBarlieView: View {
     var body: some View {
         NavigationView {
             ZStack(alignment: .top) {
-                // Scrollable Content
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        LazyVStack(spacing: 0) {
-                            // Profile Header with Fixed Search Icon
-                            ProfileHeaderWithFixedSearchView(
-                                isSearching: $isSearching,
-                                showCompactHeader: $showCompactHeader,
-                                headerHeight: $headerHeight
+                // Main scrollable content
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        // Header with scroll detection
+                        GeometryReader { geometry in
+                            CollapsingHeaderView(
+                                isCollapsed: $isHeaderCollapsed,
+                                isSearching: $isSearching
                             )
-                            
-                            // User Stats
-                            UserStatsView()
-                                .padding(.bottom, 16)
-                            
-                            // Action Buttons
-                            ActionButtonsView()
-                                .padding(.bottom, 16)
-                            
-                            // Tab Selector
-                            ProfileTabSelector(selectedTab: $selectedTab)
-                                .padding(.bottom, 16)
-                            
-                            // Content based on selected tab
-                            Group {
-                                switch selectedTab {
-                                case .next:
-                                    NextBeersGridView(viewModel: viewModel)
-                                case .drank:
-                                    DrankBeersGridView(viewModel: viewModel)
-                                case .lists:
-                                    ListsView(viewModel: viewModel)
-                                }
-                            }
-                            .animation(.easeInOut(duration: 0.3), value: selectedTab)
-                        }
-                    }
-                    .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
-                        // Scroll detection is now handled in ProfileHeaderWithFixedSearchView
-                        print("Scroll offset: \(value), showCompact: \(showCompactHeader)")
-                    }
-                }
-                
-                // Navigation Bar (appears when scrolling)
-                if showCompactHeader {
-                    CompactNavigationBarView(isSearching: $isSearching)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                        .zIndex(1)
-                }
-                
-                // Full-Screen Search Overlay
-                if isSearching {
-                    VStack(spacing: 0) {
-                        // Search Bar with Filter and Cancel
-                        HStack {
-                            HStack {
-                                Image(systemName: "magnifyingglass")
-                                    .foregroundColor(.secondary)
-                                
-                                TextField("Search for beers, breweries, or styles", text: $searchText)
-                                    .textFieldStyle(PlainTextFieldStyle())
-                                    .focused($isSearchFocused)
-                                    .onChange(of: searchText) { newValue in
-                                        // Handle search in profile context
+                            .background(
+                                Color.clear
+                                    .onAppear {
+                                        headerHeight = geometry.size.height
                                     }
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color(.systemGray6))
-                            .cornerRadius(8)
-                            
-                                // Filter Button
-                                Button(action: {
-                                    // Handle filter action
-                                }) {
-                                    Image(systemName: "slider.horizontal.3")
-                                        .font(.system(size: 20))
-                                        .foregroundColor(.white)
-                                }
-                            .padding(.leading, 8)
-                            
-                            // Cancel Button
-                            Button(action: {
-                                withAnimation(.easeInOut(duration: 0.3)) {
-                                    isSearching = false
-                                    isSearchFocused = false
-                                    searchText = ""
-                                }
-                            }) {
-                                Text("Cancel")
-                                    .foregroundColor(.white)
-                                    .font(.system(size: 16))
-                            }
-                            .padding(.leading, 8)
+                                    .onChange(of: geometry.frame(in: .global).minY) { _, newValue in
+                                        scrollOffset = newValue
+                                        handleScrollOffsetChange(newValue)
+                                        print("Scroll offset: \(newValue)")
+                                    }
+                            )
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 60) // Account for status bar
-                        .padding(.bottom, 12)
-                         .background(Color.black)
-                        .onAppear {
-                            // Set focus when search overlay appears
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                isSearchFocused = true
-                            }
-                        }
+                        .frame(height: headerHeight)
                         
-                        // Content Area - Blank until text is typed
-                        if searchText.isEmpty {
-                            Spacer()
-                        } else {
-                            // Search Results (could be profile-specific search)
-                            ScrollView {
-                                LazyVStack(spacing: 0) {
-                                    // For now, show a placeholder - could search user's beers, lists, etc.
-                                    Text("Search results for: \(searchText)")
-                                        .font(.system(size: 16))
-                                        .foregroundColor(.secondary)
-                                        .padding()
-                                }
+                        
+                        // User stats
+                        UserStatsView()
+                            .padding(.bottom, 16)
+                        
+                        // Action buttons
+                        ActionButtonsView()
+                            .padding(.bottom, 16)
+                        
+                        // Tab selector
+                        ProfileTabSelector(selectedTab: $selectedTab)
+                            .padding(.bottom, 16)
+                            .background(Color.black)
+                        
+                        // Content based on selected tab
+                        VStack(spacing: 0) {
+                            switch selectedTab {
+                            case .next:
+                                NextBeersGridView(viewModel: viewModel)
+                            case .drank:
+                                DrankBeersGridView(viewModel: viewModel)
+                            case .lists:
+                                ListsView(viewModel: viewModel)
                             }
                         }
+                        .animation(.easeInOut(duration: 0.3), value: selectedTab)
                     }
-                         .background(Color.black)
-                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
+                
+                // Compact navigation bar overlay
+                CompactNavigationBarView(isSearching: $isSearching)
+                    .opacity(isHeaderCollapsed ? 1 : 0)
+                    .zIndex(1)
+                    .animation(.none, value: isHeaderCollapsed)
+                
+                // Search overlay
+                if isSearching {
+                    SearchOverlayView(
+                        searchText: $searchText,
+                        isSearching: $isSearching,
+                        isSearchFocused: $isSearchFocused
+                    )
+                    .transition(.opacity)
+                    .zIndex(2)
                 }
             }
             .navigationBarHidden(true)
+            .background(Color.black)
+        }
+        .navigationViewStyle(StackNavigationViewStyle())
+    }
+    
+    // MARK: - Scroll Handling
+    
+    private func handleScrollOffsetChange(_ offset: CGFloat) {
+        // Calculate scroll velocity
+        let currentTime = Date()
+        let timeDelta = currentTime.timeIntervalSince(lastScrollTime)
+        
+        if timeDelta > 0 {
+            let offsetDelta = offset - scrollOffset
+            scrollVelocity = abs(offsetDelta) / CGFloat(timeDelta)
+        }
+        
+        lastScrollTime = currentTime
+        scrollOffset = offset
+        
+        // Immediate threshold with velocity-based animation
+        let threshold: CGFloat = 0  // Trigger immediately on any scroll
+        
+        let shouldCollapse = offset < threshold
+        
+        if shouldCollapse != isHeaderCollapsed {
+            // Calculate animation response based on scroll velocity
+            // Faster scroll = faster animation, slower scroll = slower animation
+            let baseResponse: CGFloat = 0.3
+            let velocityFactor = min(max(scrollVelocity * 0.1, 0.1), 2.0) // Clamp between 0.1 and 2.0
+            let dynamicResponse = baseResponse / velocityFactor
+            
+            withAnimation(.interactiveSpring(
+                response: dynamicResponse, 
+                dampingFraction: 0.7, 
+                blendDuration: 0.05
+            )) {
+                isHeaderCollapsed = shouldCollapse
+            }
         }
     }
 }
 
-// Custom preference key for scroll offset
-struct ScrollOffsetPreferenceKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = nextValue()
-    }
-}
+// MARK: - Collapsing Header View
 
-// Compact Navigation Bar that appears when scrolling
-struct CompactNavigationBarView: View {
+struct CollapsingHeaderView: View {
+    @Binding var isCollapsed: Bool
     @Binding var isSearching: Bool
     
     var body: some View {
-        HStack(alignment: .top) {
+        HStack(alignment: .top, spacing: 16) {
+            // Search button (fixed position)
             Button(action: {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     isSearching = true
                 }
             }) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 18))
+                    .font(.system(size: 20, weight: .medium))
                     .foregroundColor(.white)
                     .frame(width: 44, height: 44)
-                    .padding(.top, 2)
+                    .background(Color.black)
             }
             
             Spacer()
             
-            Text("Rome")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(.white)
-            
-            Spacer()
-            
-            // Empty space for symmetry
-            Color.clear
-                .frame(width: 44, height: 44)
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
-        .background(
-            Color.black
-                .ignoresSafeArea(.container, edges: .top)
-        )
-        .shadow(color: .black.opacity(0.1), radius: 1, x: 0, y: 1)
-    }
-}
-
-struct ProfileHeaderWithFixedSearchView: View {
-    @Binding var isSearching: Bool
-    @Binding var showCompactHeader: Bool
-    @Binding var headerHeight: CGFloat
-    
-    var body: some View {
-        HStack(alignment: .top) {
-            // Fixed Search Icon (never moves)
-            Button(action: {
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    isSearching = true
-                }
-            }) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 20))
-                    .foregroundColor(.white)
-                    .frame(width: 44, height: 44)
-                    .padding(.top, 2)
-            }
-            
-            Spacer()
-            
-            // Profile Content (shrinks and fades)
-            VStack(spacing: 4) {
-                // Profile Image - shrinks when scrolling
+            // Profile content (animates based on collapse state)
+            VStack(spacing: 8) {
+                // Profile image
                 Circle()
-                    .fill(Color(.systemGray2))
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                Color.blue.opacity(0.8),
+                                Color.purple.opacity(0.8)
+                            ]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
                     .frame(
-                        width: showCompactHeader ? 30 : 60,
-                        height: showCompactHeader ? 30 : 60
+                        width: isCollapsed ? 0 : 80,
+                        height: isCollapsed ? 0 : 80
                     )
                     .overlay(
                         Image(systemName: "person.fill")
-                            .font(.system(size: showCompactHeader ? 15 : 30))
-                            .foregroundColor(.primary)
+                            .font(.system(size: isCollapsed ? 0 : 40))
+                            .foregroundColor(.white)
                     )
-                    .animation(.easeInOut(duration: 0.25), value: showCompactHeader)
+                    .animation(.easeInOut(duration: 0.3), value: isCollapsed)
                 
-                // Username - fades out when scrolling
+                // Username
                 Text("Rome")
-                    .font(.system(size: showCompactHeader ? 17 : 24, weight: .bold))
+                    .font(.system(
+                        size: isCollapsed ? 0 : 18,
+                        weight: .semibold
+                    ))
                     .foregroundColor(.white)
-                    .opacity(showCompactHeader ? 0 : 1)
-                    .animation(.easeInOut(duration: 0.25), value: showCompactHeader)
+                    .opacity(isCollapsed ? 0 : 1)
+                    .animation(.easeInOut(duration: 0.3), value: isCollapsed)
                 
-                // Handle - fades out when scrolling
+                // Handle
                 Text("@romandenson")
-                    .font(.system(size: 14))
+                    .font(.system(
+                        size: isCollapsed ? 0 : 16,
+                        weight: .medium
+                    ))
                     .foregroundColor(.secondary)
-                    .opacity(showCompactHeader ? 0 : 1)
-                    .animation(.easeInOut(duration: 0.25), value: showCompactHeader)
+                    .opacity(isCollapsed ? 0 : 1)
+                    .animation(.easeInOut(duration: 0.3), value: isCollapsed)
             }
             
             Spacer()
@@ -259,25 +210,11 @@ struct ProfileHeaderWithFixedSearchView: View {
                 .frame(width: 44, height: 44)
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 20)
+        .padding(.vertical, 24)
         .background(Color.black)
         .background(
             GeometryReader { geometry in
                 Color.clear
-                    .onAppear {
-                        headerHeight = geometry.size.height
-                    }
-                    .onChange(of: geometry.frame(in: .global).minY) { newValue in
-                        // More reliable scroll detection
-                        let threshold: CGFloat = headerHeight > 0 ? headerHeight * 0.3 : 60
-                        let shouldShowCompact = newValue < -threshold
-                        
-                        if shouldShowCompact != showCompactHeader {
-                            withAnimation(.easeInOut(duration: 0.25)) {
-                                showCompactHeader = shouldShowCompact
-                            }
-                        }
-                    }
                     .preference(
                         key: ScrollOffsetPreferenceKey.self,
                         value: geometry.frame(in: .global).minY
@@ -287,44 +224,31 @@ struct ProfileHeaderWithFixedSearchView: View {
     }
 }
 
-struct ProfileHeaderView: View {
+// MARK: - Compact Navigation Bar
+
+struct CompactNavigationBarView: View {
     @Binding var isSearching: Bool
     
     var body: some View {
-        HStack(alignment: .top) {
+        HStack(alignment: .center) {
+            // Search button
             Button(action: {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     isSearching = true
                 }
             }) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 20))
+                    .font(.system(size: 18, weight: .medium))
                     .foregroundColor(.white)
                     .frame(width: 44, height: 44)
-                    .padding(.top, 2) // Align with top of profile image
             }
             
             Spacer()
             
-            VStack(spacing: 4) {
-                // Profile Image
-                Circle()
-                    .fill(Color(.systemGray2))
-                    .frame(width: 60, height: 60)
-                    .overlay(
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 30))
-                            .foregroundColor(.primary)
-                    )
-                
-                Text("Rome")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.white)
-                
-                Text("@romandenson")
-                    .font(.system(size: 14))
-                    .foregroundColor(.secondary)
-            }
+            // Title
+            Text("Rome")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(.white)
             
             Spacer()
             
@@ -333,75 +257,16 @@ struct ProfileHeaderView: View {
                 .frame(width: 44, height: 44)
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 20)
-                         .background(Color.black)
+        .padding(.vertical, 16)
+        .background(
+            Color.black
+                .ignoresSafeArea(.container, edges: .top)
+        )
+        .shadow(color: .black.opacity(0.8), radius: 12, x: 0, y: 6)
     }
 }
 
-struct UserStatsView: View {
-    var body: some View {
-        HStack(spacing: 20) {
-            StatItemView(number: "127", label: "Beers Rated")
-            
-            Spacer()
-            
-            StatItemView(number: "4.2", label: "Avg Rating")
-        }
-        .padding(.horizontal, 20)
-    }
-}
-
-struct StatItemView: View {
-    let number: String
-    let label: String
-    
-    var body: some View {
-        VStack(spacing: 2) {
-            Text(number)
-                .font(.system(size: 24, weight: .bold))
-                .foregroundColor(.primary)
-            
-            Text(label)
-                .font(.system(size: 12))
-                .foregroundColor(.secondary)
-        }
-    }
-}
-
-struct ActionButtonsView: View {
-    var body: some View {
-        HStack(spacing: 12) {
-            ActionButtonView(icon: "clock", title: "Activity")
-            ActionButtonView(icon: "square.and.arrow.up", title: "Share")
-            ActionButtonView(icon: "gear", title: "Settings")
-        }
-        .padding(.horizontal, 20)
-    }
-}
-
-struct ActionButtonView: View {
-    let icon: String
-    let title: String
-    
-    var body: some View {
-        Button(action: {
-            // Handle action
-        }) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 14))
-                
-                Text(title)
-                    .font(.system(size: 13, weight: .medium))
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color(.systemGray6))
-            .foregroundColor(.primary)
-            .cornerRadius(8)
-        }
-    }
-}
+// MARK: - Profile Tab Selector
 
 struct ProfileTabSelector: View {
     @Binding var selectedTab: MyBarlieView.ProfileTab
@@ -415,9 +280,14 @@ struct ProfileTabSelector: View {
                     }
                 }) {
                     VStack(spacing: 4) {
-                        Text(tab.rawValue)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(selectedTab == tab ? .primary : .secondary)
+                        HStack(spacing: 6) {
+                            Image(systemName: iconForTab(tab))
+                                .font(.system(size: 16, weight: .medium))
+                            
+                            Text(tab.rawValue)
+                                .font(.system(size: 16, weight: .medium))
+                        }
+                        .foregroundColor(selectedTab == tab ? .primary : .secondary)
                         
                         Rectangle()
                             .frame(height: 2)
@@ -428,73 +298,200 @@ struct ProfileTabSelector: View {
                 }
             }
         }
-        .padding(.horizontal, 20)
-                         .background(Color.black)
+        .background(Color.black)
+    }
+    
+    private func iconForTab(_ tab: MyBarlieView.ProfileTab) -> String {
+        switch tab {
+        case .next:
+            return "clock"
+        case .drank:
+            return "checkmark.circle"
+        case .lists:
+            return "list.bullet"
+        }
     }
 }
+
+// MARK: - User Stats View
+
+struct UserStatsView: View {
+    var body: some View {
+        HStack(spacing: 40) {
+            StatItemView(title: "Next", value: "12")
+            StatItemView(title: "Drank", value: "47")
+            StatItemView(title: "Lists", value: "3")
+        }
+        .padding(.horizontal, 20)
+    }
+}
+
+struct StatItemView: View {
+    let title: String
+    let value: String
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.system(size: 24, weight: .bold))
+                .foregroundColor(.white)
+            
+            Text(title)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+// MARK: - Action Buttons View
+
+struct ActionButtonsView: View {
+    var body: some View {
+        HStack(spacing: 12) {
+            ActionButtonView(
+                title: "Add Beer",
+                icon: "plus",
+                action: {}
+            )
+            
+            ActionButtonView(
+                title: "Scan",
+                icon: "qrcode.viewfinder",
+                action: {}
+            )
+        }
+        .padding(.horizontal, 20)
+    }
+}
+
+struct ActionButtonView: View {
+    let title: String
+    let icon: String
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .medium))
+                
+                Text(title)
+                    .font(.system(size: 16, weight: .medium))
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Color.blue)
+            .cornerRadius(8)
+        }
+    }
+}
+
+// MARK: - Search Overlay View
+
+struct SearchOverlayView: View {
+    @Binding var searchText: String
+    @Binding var isSearching: Bool
+    @FocusState.Binding var isSearchFocused: Bool
+    
+    var body: some View {
+        ZStack {
+            // Background
+            Color.black.opacity(0.95)
+                .ignoresSafeArea()
+            
+            VStack(spacing: 20) {
+                // Search bar
+                HStack(spacing: 12) {
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            isSearching = false
+                            isSearchFocused = false
+                        }
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.white)
+                            .frame(width: 44, height: 44)
+                    }
+                    
+                    HStack(spacing: 8) {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(.secondary)
+                        
+                        TextField("Search for beers, breweries, or styles", text: $searchText)
+                            .textFieldStyle(PlainTextFieldStyle())
+                            .focused($isSearchFocused)
+                            .onChange(of: searchText) { _, newValue in
+                                // Handle search in profile context
+                            }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                
+                Spacer()
+                
+                // Search results placeholder
+                VStack(spacing: 16) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 48))
+                        .foregroundColor(.secondary)
+                    
+                    Text("Search for beers, breweries, or styles")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+            }
+        }
+    }
+}
+
+// MARK: - Content Views
 
 struct NextBeersGridView: View {
     @ObservedObject var viewModel: MyBarlieViewModel
     
-    let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 4)
-    
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 0) {
-            ForEach(viewModel.nextBeers) { beer in
-                BeerGridView(beer: beer)
+        LazyVGrid(columns: [
+            GridItem(.flexible()),
+            GridItem(.flexible())
+        ], spacing: 16) {
+            ForEach(0..<12, id: \.self) { index in
+                ProfileBeerCardView(
+                    title: "Beer \(index + 1)",
+                    brewery: "Brewery \(index + 1)",
+                    style: "IPA"
+                )
             }
-            
-            // Add More Card
-            AddMoreBeerView()
         }
+        .padding(.horizontal, 20)
     }
 }
 
 struct DrankBeersGridView: View {
     @ObservedObject var viewModel: MyBarlieViewModel
     
-    let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 4)
-    
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 0) {
-            ForEach(viewModel.drankBeers) { beer in
-                BeerGridView(beer: beer)
-            }
-            
-            // Add More Card
-            AddMoreBeerView()
-        }
-    }
-}
-
-struct BeerGridView: View {
-    let beer: Beer
-    
-    var body: some View {
-        Rectangle()
-            .fill(
-                LinearGradient(
-                    gradient: Gradient(colors: [Color(.systemGray4), Color(.systemGray5)]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
+        LazyVGrid(columns: [
+            GridItem(.flexible()),
+            GridItem(.flexible())
+        ], spacing: 16) {
+            ForEach(0..<47, id: \.self) { index in
+                ProfileBeerCardView(
+                    title: "Drank Beer \(index + 1)",
+                    brewery: "Brewery \(index + 1)",
+                    style: "Stout"
                 )
-            )
-            .aspectRatio(1, contentMode: .fit)
-            .clipped()
-    }
-}
-
-struct AddMoreBeerView: View {
-    var body: some View {
-        Rectangle()
-            .fill(Color(.systemGray6))
-            .aspectRatio(1, contentMode: .fit)
-            .overlay(
-                Image(systemName: "plus")
-                    .font(.system(size: 24))
-                    .foregroundColor(.secondary)
-            )
-            .clipped()
+            }
+        }
+        .padding(.horizontal, 20)
     }
 }
 
@@ -502,96 +499,103 @@ struct ListsView: View {
     @ObservedObject var viewModel: MyBarlieViewModel
     
     var body: some View {
-        VStack(spacing: 0) {
-            ForEach(viewModel.beerLists) { list in
-                ListCardView(list: list)
+        VStack(spacing: 16) {
+            ForEach(0..<3, id: \.self) { index in
+                ListCardView(
+                    title: "List \(index + 1)",
+                    count: "\(Int.random(in: 5...20)) beers"
+                )
             }
-            
-            CreateNewListView()
         }
+        .padding(.horizontal, 20)
+    }
+}
+
+// MARK: - Card Views
+
+struct ProfileBeerCardView: View {
+    let title: String
+    let brewery: String
+    let style: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Beer image placeholder
+            Rectangle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(height: 120)
+                .cornerRadius(8)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                
+                Text(brewery)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                
+                Text(style)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.blue)
+                    .lineLimit(1)
+            }
+        }
+        .padding(12)
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
     }
 }
 
 struct ListCardView: View {
-    let list: BeerList
+    let title: String
+    let count: String
     
     var body: some View {
-        HStack(spacing: 12) {
-            // List Icon
-            RoundedRectangle(cornerRadius: 8)
-                .fill(
-                    LinearGradient(
-                        gradient: Gradient(colors: [Color(.systemGray4), Color(.systemGray5)]),
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 60, height: 80)
+        HStack(spacing: 16) {
+            // List icon
+            Image(systemName: "list.bullet")
+                .font(.system(size: 24))
+                .foregroundColor(.blue)
+                .frame(width: 40, height: 40)
+                .background(Color.blue.opacity(0.1))
+                .cornerRadius(8)
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(list.name)
+                Text(title)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
+                    .foregroundColor(.white)
                 
-                Text("\(list.beerIds.count) beers")
-                    .font(.system(size: 14))
+                Text(count)
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondary)
             }
             
             Spacer()
             
             Image(systemName: "chevron.right")
-                .font(.system(size: 14))
+                .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.secondary)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
-                         .background(Color.black)
-        .overlay(
-            Rectangle()
-                .frame(height: 0.5)
-                .foregroundColor(Color(.separator))
-                .offset(y: 16),
-            alignment: .bottom
-        )
+        .padding(16)
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
     }
 }
 
-struct CreateNewListView: View {
-    var body: some View {
-        HStack(spacing: 12) {
-            // Create Icon
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color(.systemGray5))
-                .frame(width: 60, height: 80)
-                .overlay(
-                    Image(systemName: "plus")
-                        .font(.system(size: 20))
-                        .foregroundColor(.secondary)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.secondary, style: StrokeStyle(lineWidth: 2, dash: [5]))
-                )
-            
-            Text("Create New List")
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.primary)
-            
-            Spacer()
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
-                         .background(Color.black)
-        .overlay(
-            Rectangle()
-                .frame(height: 0.5)
-                .foregroundColor(Color(.separator))
-                .offset(y: 16),
-            alignment: .bottom
-        )
+// MARK: - Preference Key
+
+struct ScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
     }
 }
+
+// MARK: - Preview
 
 #Preview {
     MyBarlieView()
