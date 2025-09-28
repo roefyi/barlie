@@ -111,22 +111,22 @@ struct MyBarlieView: View {
         lastScrollTime = currentTime
         scrollOffset = offset
         
-        // Immediate threshold with very slow, visible animation
-        let threshold: CGFloat = 0  // Trigger immediately on any scroll
+        // Much more lenient thresholds to prevent snapping
+        let collapseThreshold: CGFloat = -80  // Only collapse when scrolled down 80 points
+        let expandThreshold: CGFloat = -20    // Only expand when scrolled back up to -20 points
         
-        let shouldCollapse = offset < threshold
+        let shouldCollapse: Bool
+        if isHeaderCollapsed {
+            // Currently collapsed - only expand if we're well above the expand threshold
+            shouldCollapse = offset < expandThreshold
+        } else {
+            // Currently expanded - only collapse if we're well below the collapse threshold
+            shouldCollapse = offset < collapseThreshold
+        }
         
         if shouldCollapse != isHeaderCollapsed {
-            // Much slower animation so users can see the collapse happening
-            let baseResponse: CGFloat = 3.0  // Much slower base response
-            let velocityFactor = min(max(scrollVelocity * 0.05, 0.3), 1.5) // Slower velocity factor
-            let dynamicResponse = baseResponse / velocityFactor
-            
-            withAnimation(.interactiveSpring(
-                response: dynamicResponse, 
-                dampingFraction: 0.8, 
-                blendDuration: 0.3
-            )) {
+            // Very smooth, slow animation that doesn't interfere with scrolling
+            withAnimation(.easeInOut(duration: 0.4)) {
                 isHeaderCollapsed = shouldCollapse
             }
         }
@@ -474,23 +474,52 @@ struct NextBeersGridView: View {
     @ObservedObject var viewModel: MyBarlieViewModel
     
     var body: some View {
-        GeometryReader { geometry in
-            let screenWidth = geometry.size.width
-            let cellWidth = screenWidth / 4
-            
-            VStack(spacing: 0) {
-                ForEach(0..<3, id: \.self) { row in
-                    HStack(spacing: 0) {
-                        ForEach(0..<4, id: \.self) { column in
-                            let index = row * 4 + column
-                            if index < Beer.sampleBeers.count {
-                                ProfileBeerCardView(beer: Beer.sampleBeers[index])
-                                    .frame(width: cellWidth, height: cellWidth)
+        VStack(spacing: 0) {
+            ForEach(0..<4, id: \.self) { row in
+                HStack(spacing: 0) {
+                    ForEach(0..<4, id: \.self) { column in
+                        let index = row * 4 + column
+                        if index < Beer.sampleBeers.count {
+                            ProfileBeerCardView(beer: Beer.sampleBeers[index])
+                                .containerRelativeFrame(.horizontal, count: 4, span: 1, spacing: 0)
+                                .aspectRatio(1, contentMode: .fit)
+                        } else if index == Beer.sampleBeers.count {
+                            // Add Beer button
+            Button(action: {
+                                // Handle add beer action
+                            }) {
+                                ZStack {
+                                    Rectangle()
+                                        .fill(Color(.systemGray5))
+                                        .containerRelativeFrame(.horizontal, count: 4, span: 1, spacing: 0)
+                                        .aspectRatio(1, contentMode: .fit)
+                                    
+                                    VStack(spacing: 4) {
+                                        Image(systemName: "plus")
+                                            .font(.system(size: 24, weight: .medium))
+                                            .foregroundColor(.secondary)
+                                        
+                                        Text("Add Beer")
+                                            .font(.system(size: 12, weight: .medium))
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
                             }
+                            .buttonStyle(PlainButtonStyle())
+                        } else {
+                            // Empty space for remaining slots in the row
+                            Rectangle()
+                                .fill(Color.clear)
+                                .containerRelativeFrame(.horizontal, count: 4, span: 1, spacing: 0)
+                                .aspectRatio(1, contentMode: .fit)
                         }
                     }
                 }
             }
+            
+            // Extra space to allow scrolling even in empty state
+            Spacer()
+                .frame(height: 1200)
         }
     }
 }
@@ -499,23 +528,52 @@ struct DrankBeersGridView: View {
     @ObservedObject var viewModel: MyBarlieViewModel
     
     var body: some View {
-        GeometryReader { geometry in
-            let screenWidth = geometry.size.width
-            let cellWidth = screenWidth / 4
-            
-            VStack(spacing: 0) {
-                ForEach(0..<12, id: \.self) { row in
-                    HStack(spacing: 0) {
-                        ForEach(0..<4, id: \.self) { column in
-                            let index = row * 4 + column
-                            if index < Beer.sampleBeers.count {
-                                ProfileBeerCardView(beer: Beer.sampleBeers[index])
-                                    .frame(width: cellWidth, height: cellWidth)
+        VStack(spacing: 0) {
+            ForEach(0..<12, id: \.self) { row in
+                HStack(spacing: 0) {
+                    ForEach(0..<4, id: \.self) { column in
+                        let index = row * 4 + column
+                        if index < Beer.sampleBeers.count {
+                            ProfileBeerCardView(beer: Beer.sampleBeers[index])
+                                .containerRelativeFrame(.horizontal, count: 4, span: 1, spacing: 0)
+                                .aspectRatio(1, contentMode: .fit)
+                        } else if index == Beer.sampleBeers.count {
+                            // Add Beer button
+            Button(action: {
+                                // Handle add beer action
+                            }) {
+                                ZStack {
+                                    Rectangle()
+                                        .fill(Color(.systemGray5))
+                                        .containerRelativeFrame(.horizontal, count: 4, span: 1, spacing: 0)
+                                        .aspectRatio(1, contentMode: .fit)
+                                    
+            VStack(spacing: 4) {
+                                        Image(systemName: "plus")
+                                            .font(.system(size: 24, weight: .medium))
+                                            .foregroundColor(.secondary)
+                                        
+                                        Text("Add Beer")
+                                            .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.secondary)
+                                    }
+                                }
                             }
+                            .buttonStyle(PlainButtonStyle())
+                        } else {
+                            // Empty space for remaining slots in the row
+                            Rectangle()
+                                .fill(Color.clear)
+                                .containerRelativeFrame(.horizontal, count: 4, span: 1, spacing: 0)
+                                .aspectRatio(1, contentMode: .fit)
                         }
                     }
                 }
             }
+            
+            // Extra space to allow scrolling even in empty state
+            Spacer()
+                .frame(height: 1200)
         }
     }
 }
@@ -525,12 +583,48 @@ struct ListsView: View {
     
     var body: some View {
         VStack(spacing: 16) {
+            // Add New List button at the top
+        Button(action: {
+                // Handle add new list action
+            }) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Rectangle()
+                            .fill(Color(.systemGray5))
+                            .frame(width: 40, height: 40)
+            .cornerRadius(8)
+                        
+                        Image(systemName: "plus")
+                            .font(.system(size: 24))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Text("Make New List")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+        }
+        .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+                         .background(Color.black)
+            }
+            .buttonStyle(PlainButtonStyle())
+            
             ForEach(0..<3, id: \.self) { index in
                 ListCardView(
                     title: "List \(index + 1)",
                     count: "\(Int.random(in: 5...20)) beers"
                 )
             }
+            
+            // Extra space to allow scrolling even in empty state
+            Spacer()
+                .frame(height: 1200)
         }
         .padding(.horizontal, 20)
     }
