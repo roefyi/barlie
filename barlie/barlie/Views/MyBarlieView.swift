@@ -636,7 +636,7 @@ struct ProfileBeerCardView: View {
     let beer: Beer
     
     var body: some View {
-        NavigationLink(destination: BeerDetailView(beer: beer)) {
+        NavigationLink(destination: BeerDetailView(beer: beer, isMarkedAsNext: true)) {
             // Very visible gradient placeholder for testing
         Rectangle()
             .fill(
@@ -706,6 +706,9 @@ struct ListCardView: View {
 
 struct BeerDetailView: View {
     let beer: Beer
+    let isMarkedAsNext: Bool
+    @State private var isNextActive = false
+    @State private var isRatingSheetPresented = false
     
     var body: some View {
         ZStack {
@@ -726,6 +729,97 @@ struct BeerDetailView: View {
                         .frame(width: 200, height: 200)
                         .cornerRadius(16)
                         .padding(.top, 40)
+                    
+                    // Action Buttons
+                    HStack(spacing: 16) {
+                        if isNextActive {
+                            // Active state with menu
+                            Menu {
+                                Button(action: {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        isNextActive = true
+                                    }
+                                }) {
+                                    Label("Currently Drinking", systemImage: "mug.fill")
+                                }
+                                
+                                Button(action: {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        isNextActive = true
+                                    }
+                                }) {
+                                    Label("Up Next", systemImage: "pin.fill")
+                                }
+                                
+                                Button(action: {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        isNextActive = true
+                                    }
+                                }) {
+                                    Label("Mark as Drank", systemImage: "checkmark.circle.fill")
+                                }
+                                
+                                Button(action: {
+                                    withAnimation(.easeInOut(duration: 0.2)) {
+                                        isNextActive = false
+                                    }
+                                }) {
+                                    Label("Unqueue", systemImage: "minus.circle.fill")
+                                }
+                            } label: {
+                                HStack(spacing: 8) {
+                                    Text("Next")
+                                        .font(.system(size: 16, weight: .medium))
+                                    Image(systemName: "chevron.down")
+                                        .font(.system(size: 14, weight: .medium))
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .background(Color.red)
+                                .cornerRadius(8)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        } else {
+                            // Inactive state with simple button
+                            Button(action: {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    isNextActive = true
+                                }
+                            }) {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "plus")
+                                        .font(.system(size: 16, weight: .medium))
+                                    Text("Next")
+                                        .font(.system(size: 16, weight: .medium))
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                        
+                        Button(action: {
+                            isRatingSheetPresented = true
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "hand.thumbsup")
+                                    .font(.system(size: 16, weight: .medium))
+                                Text("Rate it")
+                                    .font(.system(size: 16, weight: .medium))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 12)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                    .padding(.horizontal, 20)
                     
                     // Beer Information
                     VStack(alignment: .leading, spacing: 16) {
@@ -752,9 +846,6 @@ struct BeerDetailView: View {
                         
                         // Beer Details Section
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Details")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(.white)
                             
                             VStack(alignment: .leading, spacing: 8) {
                                 DetailRow(title: "ABV", value: "\(beer.abv)%")
@@ -785,12 +876,11 @@ struct BeerDetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("Beer Details")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
-            }
+        .onAppear {
+            isNextActive = isMarkedAsNext
+        }
+        .sheet(isPresented: $isRatingSheetPresented) {
+            BeerRatingSheet(beer: beer)
         }
     }
 }
@@ -821,6 +911,186 @@ struct ScrollOffsetPreferenceKey: PreferenceKey {
     
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
         value = nextValue()
+    }
+}
+
+// MARK: - Beer Rating Sheet
+
+struct BeerRatingSheet: View {
+    let beer: Beer
+    @Environment(\.dismiss) private var dismiss
+    @State private var reviewText = ""
+    @State private var selectedRating: RatingType? = nil
+    
+    enum RatingType: CaseIterable {
+        case thumbsDown, neutral, thumbsUp, heart
+        
+        var icon: String {
+            switch self {
+            case .thumbsDown: return "hand.thumbsdown.fill"
+            case .neutral: return "face.dashed"
+            case .thumbsUp: return "hand.thumbsup"
+            case .heart: return "heart"
+            }
+        }
+        
+        var emoji: String {
+            switch self {
+            case .thumbsDown: return "👎"
+            case .neutral: return "😑"
+            case .thumbsUp: return "👍"
+            case .heart: return "❤️"
+            }
+        }
+    }
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                Color.black
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // Header with beer info
+                    HStack(spacing: 16) {
+                        // Beer image placeholder
+                        Rectangle()
+                            .fill(LinearGradient(
+                                colors: [.blue, .purple, .pink, .orange, .red],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ))
+                            .frame(width: 80, height: 80)
+                            .cornerRadius(12)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Rome drank \(beer.name)")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.white)
+                            
+                            Text(beer.brewery)
+                                .font(.system(size: 16))
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            // More options
+                        }) {
+                            Image(systemName: "ellipsis")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.white)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    .padding(.bottom, 30)
+                    
+                    // Rating Section
+                    VStack(spacing: 16) {
+                        Text("RATING")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .tracking(1)
+                        
+                        HStack(spacing: 20) {
+                            ForEach(RatingType.allCases, id: \.self) { rating in
+                                Button(action: {
+                                    selectedRating = rating
+                                }) {
+                                    if selectedRating == rating {
+                                        Text(rating.emoji)
+                                            .font(.system(size: 24))
+                                    } else {
+                                        Image(systemName: rating.icon)
+                                            .font(.system(size: 20, weight: .medium))
+                                            .foregroundColor(.white)
+                                    }
+                                }
+                                .frame(width: 50, height: 50)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(selectedRating == rating ? Color.red : Color(.systemGray6))
+                                )
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                        }
+                    }
+                    .padding(.bottom, 30)
+                    
+                    // Review Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("REVIEW")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .tracking(1)
+                        
+                        TextEditor(text: $reviewText)
+                            .font(.system(size: 16))
+                            .foregroundColor(.white)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                            .frame(height: 120)
+                            .overlay(
+                                Group {
+                                    if reviewText.isEmpty {
+                                        HStack {
+                                            VStack {
+                                                Text("What'd you think?")
+                                                    .font(.system(size: 16))
+                                                    .foregroundColor(.secondary)
+                                                    .padding(.top, 8)
+                                                Spacer()
+                                            }
+                                            Spacer()
+                                        }
+                                        .allowsHitTesting(false)
+                                    }
+                                }
+                            )
+                        
+                        HStack {
+                            Spacer()
+                            
+                            Text("\(reviewText.count)/280")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    
+                    Spacer()
+                    
+                    // Action Buttons
+                    HStack(spacing: 16) {
+                        Button("Cancel") {
+                            dismiss()
+                        }
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.clear)
+                        .cornerRadius(8)
+                        
+                        Button("Submit") {
+                            // Handle submit
+                            dismiss()
+                        }
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.red)
+                        .cornerRadius(8)
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
+                }
+            }
+        }
+        .navigationBarHidden(true)
     }
 }
 

@@ -153,61 +153,73 @@ struct DiscoverView: View {
 
 struct BeerCardView: View {
     let beer: Beer
+    @State private var isNextActive = false
+    @State private var showBeerDetail = false
     
     var body: some View {
-        NavigationLink(destination: BeerDetailView(beer: beer)) {
-            HStack(spacing: 12) {
-                // Beer Image Placeholder
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color(.systemGray4), Color(.systemGray5)]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
+        HStack(spacing: 12) {
+            // Beer Image Placeholder
+            RoundedRectangle(cornerRadius: 8)
+                .fill(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color(.systemGray4), Color(.systemGray5)]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     )
-                    .frame(width: 60, height: 80)
+                )
+                .frame(width: 60, height: 80)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(beer.name)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.primary)
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(beer.name)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
-                    
-                    Text(beer.brewery)
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                    
-                    Text(beer.styleAndABV)
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                }
+                Text(beer.brewery)
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
                 
-                Spacer()
-                
-                Button(action: {
-                    // Handle +Next action
-                }) {
-                    Text("+Next")
-                        .font(.system(size: 12, weight: .medium))
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color(.systemGray5))
-                        .foregroundColor(.primary)
-                        .cornerRadius(6)
-                }
+                Text(beer.styleAndABV)
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
-                             .background(Color.black)
-            .overlay(
-                Rectangle()
-                    .frame(height: 0.5)
-                    .foregroundColor(Color(.separator))
-                    .offset(y: 16),
-                alignment: .bottom
-            )
+            
+            Spacer()
+            
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isNextActive = true
+                    // Add beer to user's profile (simulate adding to Next list)
+                    // In a real app, this would save to a database or user preferences
+                }
+            }) {
+                Text(isNextActive ? "Next" : "+Next")
+                    .font(.system(size: 12, weight: .medium))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(isNextActive ? Color.red : Color(.systemGray5))
+                    .foregroundColor(isNextActive ? .white : .primary)
+                    .cornerRadius(6)
+            }
+            .disabled(isNextActive)
         }
-        .buttonStyle(PlainButtonStyle())
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
+        .background(Color.black)
+        .overlay(
+            Rectangle()
+                .frame(height: 0.5)
+                .foregroundColor(Color(.separator))
+                .offset(y: 16),
+            alignment: .bottom
+        )
+        .onTapGesture {
+            showBeerDetail = true
+        }
+        .sheet(isPresented: $showBeerDetail) {
+            NavigationView {
+                BeerDetailView(beer: beer, isMarkedAsNext: isNextActive)
+            }
+        }
     }
 }
 
