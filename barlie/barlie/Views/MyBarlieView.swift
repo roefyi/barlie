@@ -45,6 +45,7 @@ struct MyBarlieView: View {
                         .frame(height: headerHeight)
                         
                         
+                        
                         // User stats
                             UserStatsView()
                                 .padding(.bottom, 16)

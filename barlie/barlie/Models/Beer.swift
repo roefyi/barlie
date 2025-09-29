@@ -15,27 +15,6 @@ struct Beer: Identifiable, Codable {
         "\(style) • \(String(format: "%.1f", abv))%"
     }
     
-    var abvString: String {
-        String(format: "%.1f%%", abv)
-    }
-    
-    var ibuString: String {
-        "\(ibu) IBU"
-    }
-    
-    var hasImage: Bool {
-        return imageUrl != nil && !imageUrl!.isEmpty
-    }
-    
-    var displayImageUrl: String? {
-        // Punk API sometimes returns placeholder images, filter those out
-        guard let imageUrl = imageUrl,
-              !imageUrl.contains("keg.png") && 
-              !imageUrl.contains("placeholder") else {
-            return nil
-        }
-        return imageUrl
-    }
 
     static let sampleBeers: [Beer] = [
         Beer(id: UUID(), name: "Hazy Jane", brewery: "BrewDog", style: "IPA", abv: 5.0, ibu: 35, color: "Golden", description: "A refreshing and crisp IPA with a perfect balance of hops and malt. This IPA offers a smooth drinking experience with subtle citrus notes and a clean finish."),
